@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Sales Dashboard</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons (Vanilla JS version) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Applying the Inter font as the default */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB; /* A slightly off-white for a softer look */
+        }
+
+        /* Custom styles for the modal to ensure it appears correctly */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+        
+        /* General card styling for a consistent look */
+        .dashboard-card {
+            background-color: #FFFFFF;
+            border-radius: 1rem; /* Generous rounding */
+            border: 1px solid #E5E7EB; /* Subtle border */
+            padding: 1.5rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6B7280; /* text-gray-500 */
+        }
+
+        /* Plan Selector Modal Specific Styles */
+        .plan-card {
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .plan-card:hover {
+            border-color: #4F46E5; /* indigo-600 */
+            box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- Main Dashboard Container -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+
+        <!-- Header -->
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">VPN Sales Dashboard</h1>
+            </div>
+            <!-- Action Buttons -->
+            <div class="flex space-x-2">
+                <button id="exportBtn" class="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition text-sm flex items-center space-x-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Export</span>
+                </button>
+                <button id="resetBtn" class="bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition text-sm flex items-center space-x-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Key Performance Indicators (KPIs) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Revenue Card -->
+            <div class="dashboard-card">
+                <div class="kpi-card-header">
+                    <h3 class="font-medium">Total Revenue</h3>
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                </div>
+                <p id="totalRevenue" class="text-2xl font-semibold text-gray-900 mt-2">0 Toman</p>
+                <p id="totalSales" class="text-sm text-gray-500">0 sales recorded</p>
+            </div>
+            <!-- Total Volume Sold Card -->
+            <div class="dashboard-card">
+                <div class="kpi-card-header">
+                    <h3 class="font-medium">Volume Sold</h3>
+                    <i data-lucide="database" class="w-5 h-5"></i>
+                </div>
+                <p id="totalVolumeSold" class="text-2xl font-semibold text-gray-900 mt-2">0 GB</p>
+                <p class="text-sm text-gray-500">Total data volume sold</p>
+            </div>
+            <!-- Monthly Quota Card -->
+            <div class="dashboard-card">
+                <div class="kpi-card-header">
+                    <h3 class="font-medium">Monthly Quota</h3>
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                </div>
+                <p id="monthlyQuota" class="text-2xl font-semibold text-gray-900 mt-2">0 GB</p>
+                <p id="quotaUsed" class="text-sm text-gray-500">0% used</p>
+            </div>
+            <!-- Remaining Volume Card -->
+            <div class="dashboard-card">
+                <div class="kpi-card-header">
+                    <h3 class="font-medium">Remaining</h3>
+                    <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                </div>
+                <p id="remainingVolume" class="text-2xl font-semibold text-gray-900 mt-2">0 GB</p>
+                <p id="remainingStatus" class="text-sm font-medium text-green-600">Available</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Chart & Add Sale -->
+            <div class="lg:col-span-2 flex flex-col gap-8">
+                <!-- Sales Chart -->
+                <div class="dashboard-card h-96">
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <!-- Sales Entry Form -->
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-semibold mb-1">Add New Sale</h2>
+                    <p class="text-gray-500 mb-4 text-sm">Record a new VPN service sale</p>
+                    <form id="salesForm" class="space-y-4">
+                        <button type="button" id="selectPlanBtn" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-left text-gray-500">
+                            Select VPN Plan
+                        </button>
+                        <div class="grid grid-cols-3 gap-4">
+                            <input type="text" id="serviceName" placeholder="Service Name" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md" readonly>
+                            <input type="number" id="salePrice" placeholder="Price" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md" readonly>
+                            <input type="number" id="dataVolume" placeholder="Volume" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md" readonly>
+                        </div>
+                        <button type="submit" class="w-full bg-gray-900 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition flex items-center justify-center space-x-2">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span>Add Sale</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Analytics, Stats & Table -->
+            <div class="lg:col-span-1 flex flex-col gap-8">
+                <!-- Service Analytics -->
+                <div class="dashboard-card">
+                    <h2 class="text-lg font-semibold mb-4">Service Analytics</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Most Popular</span>
+                            <span id="mostPopularService" class="font-semibold text-gray-800">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Least Popular</span>
+                            <span id="leastPopularService" class="font-semibold text-gray-800">-</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Quick Stats -->
+                <div class="dashboard-card">
+                    <h2 class="text-lg font-semibold mb-4">Quick Stats</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Total Services</span>
+                            <span id="totalServices" class="font-semibold text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Avg. Sale Price</span>
+                            <span id="avgSalePrice" class="font-semibold text-gray-800">0 Toman</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Avg. Volume</span>
+                            <span id="avgVolume" class="font-semibold text-gray-800">0 GB</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Yebekhe & Net Revenue Calculator -->
+                <div class="dashboard-card">
+                    <h2 class="text-lg font-semibold mb-4">Net Revenue Calculator</h2>
+                    <div class="space-y-4">
+                        <!-- Yebekhe Section -->
+                        <div>
+                            <label for="yebekhePercentage" class="text-sm font-medium text-gray-700">Yebekhe (%)</label>
+                            <div class="relative mt-1">
+                                <input type="number" id="yebekhePercentage" placeholder="Enter %" class="w-full pl-3 pr-12 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">%</span>
+                            </div>
+                            <p id="yebekheResult" class="text-sm text-right text-gray-500 mt-1">0 Toman</p>
+                        </div>
+                        <!-- Additional Costs Section -->
+                        <div>
+                            <label for="additionalCosts" class="text-sm font-medium text-gray-700">Additional Costs</label>
+                            <div class="relative mt-1">
+                                <input type="number" id="additionalCosts" placeholder="Enter amount" class="w-full pl-3 pr-16 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">Toman</span>
+                            </div>
+                        </div>
+                        <!-- Net Revenue Section -->
+                        <div class="text-center pt-3 border-t">
+                            <p class="text-sm font-medium text-gray-600">Net Revenue</p>
+                            <p id="netRevenueResult" class="text-3xl font-bold text-green-600">0 Toman</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent Sales Table -->
+                <div class="dashboard-card">
+                    <h2 class="text-lg font-semibold mb-1">Recent Sales</h2>
+                    <p class="text-gray-500 mb-4 text-sm">Latest VPN service transactions</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <tbody id="salesTableBody" class="divide-y divide-gray-200">
+                                <!-- Rows will be inserted here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="planSelectorModal" class="modal-overlay hidden opacity-0">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[80vh] flex flex-col">
+            <header class="p-4 border-b flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold">Select VPN Plan</h2>
+                    <p class="text-sm text-gray-500">Choose a plan to auto-fill the sale form.</p>
+                </div>
+                <button id="closePlanModalBtn" class="p-1 rounded-full hover:bg-gray-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </header>
+            <div id="planSelectorContent" class="p-6 overflow-y-auto space-y-6">
+                <!-- Plan groups will be inserted here -->
+            </div>
+        </div>
+    </div>
+    <div id="quotaModal" class="modal-overlay hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+            <h2 class="text-xl font-semibold mb-4">Monthly Data Quota</h2>
+            <p class="text-gray-600 mb-4">Please enter the total data volume quota for this month (GB).</p>
+            <form id="quotaForm">
+                <input type="number" id="monthlyQuotaInput" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., 5000">
+                <button type="submit" class="mt-4 w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                    Set Quota
+                </button>
+            </form>
+        </div>
+    </div>
+    <div id="resetConfirmModal" class="modal-overlay hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+            <h2 class="text-xl font-semibold mb-4">Are you sure?</h2>
+            <p class="text-gray-600 mb-6">This will delete all sales data and reset the monthly quota. This action cannot be undone.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancelResetBtn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+                <button id="confirmResetBtn" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition">
+                    Confirm Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- MAIN APP LOGIC ---
+            function startApp() {
+                // --- SERVICE PLANS DATA ---
+                const servicePlans = [
+                    { name: '10 GB - 7 Days', volume: 10, price: 17000 }, { name: '10 GB - 15 Days', volume: 10, price: 25000 }, { name: '10 GB - 30 Days', volume: 10, price: 45000 }, { name: '10 GB - 60 Days', volume: 10, price: 75000 }, { name: '10 GB - 90 Days', volume: 10, price: 105000 }, { name: '20 GB - 7 Days', volume: 20, price: 27000 }, { name: '20 GB - 15 Days', volume: 20, price: 35000 }, { name: '20 GB - 30 Days', volume: 20, price: 60000 }, { name: '20 GB - 60 Days', volume: 20, price: 90000 }, { name: '20 GB - 90 Days', volume: 20, price: 120000 }, { name: '30 GB - 7 Days', volume: 30, price: 37000 }, { name: '30 GB - 15 Days', volume: 30, price: 45000 }, { name: '30 GB - 30 Days', volume: 30, price: 75000 }, { name: '30 GB - 60 Days', volume: 30, price: 105000 }, { name: '30 GB - 90 Days', volume: 30, price: 135000 }, { name: '40 GB - 7 Days', volume: 40, price: 47000 }, { name: '40 GB - 15 Days', volume: 40, price: 55000 }, { name: '40 GB - 30 Days', volume: 40, price: 90000 }, { name: '40 GB - 60 Days', volume: 40, price: 120000 }, { name: '40 GB - 90 Days', volume: 40, price: 150000 }, { name: '50 GB - 7 Days', volume: 50, price: 57000 }, { name: '50 GB - 15 Days', volume: 50, price: 65000 }, { name: '50 GB - 30 Days', volume: 50, price: 105000 }, { name: '50 GB - 60 Days', volume: 50, price: 135000 }, { name: '50 GB - 90 Days', volume: 50, price: 165000 }, { name: '60 GB - 7 Days', volume: 60, price: 67000 }, { name: '60 GB - 15 Days', volume: 60, price: 75000 }, { name: '60 GB - 30 Days', volume: 60, price: 120000 }, { name: '60 GB - 60 Days', volume: 60, price: 150000 }, { name: '60 GB - 90 Days', volume: 60, price: 180000 }, { name: '70 GB - 60 Days', volume: 70, price: 165000 }, { name: '70 GB - 90 Days', volume: 70, price: 195000 }, { name: '80 GB - 60 Days', volume: 80, price: 180000 }, { name: '80 GB - 90 Days', volume: 80, price: 210000 }, { name: '90 GB - 60 Days', volume: 90, price: 195000 }, { name: '90 GB - 90 Days', volume: 90, price: 225000 }, { name: '100 GB - 60 Days', volume: 100, price: 210000 }, { name: '100 GB - 90 Days', volume: 100, price: 240000 },
+                ];
+
+                // --- STATE & DOM REFS ---
+                const state = { sales: JSON.parse(localStorage.getItem('vpnSales')) || [], monthlyQuota: JSON.parse(localStorage.getItem('vpnMonthlyQuota')) || { value: 0, month: '' }, chart: null, selectedPlanIndex: null };
+                const dom = {
+                    quotaModal: document.getElementById('quotaModal'), quotaForm: document.getElementById('quotaForm'), salesForm: document.getElementById('salesForm'), serviceNameInput: document.getElementById('serviceName'), salePriceInput: document.getElementById('salePrice'), dataVolumeInput: document.getElementById('dataVolume'), totalRevenueEl: document.getElementById('totalRevenue'), totalVolumeSoldEl: document.getElementById('totalVolumeSold'), remainingVolumeEl: document.getElementById('remainingVolume'), mostPopularServiceEl: document.getElementById('mostPopularService'), leastPopularServiceEl: document.getElementById('leastPopularService'), salesTableBody: document.getElementById('salesTableBody'), exportBtn: document.getElementById('exportBtn'), resetBtn: document.getElementById('resetBtn'), resetConfirmModal: document.getElementById('resetConfirmModal'), cancelResetBtn: document.getElementById('cancelResetBtn'), confirmResetBtn: document.getElementById('confirmResetBtn'), totalSalesEl: document.getElementById('totalSales'), monthlyQuotaEl: document.getElementById('monthlyQuota'), quotaUsedEl: document.getElementById('quotaUsed'), remainingStatusEl: document.getElementById('remainingStatus'), totalServicesEl: document.getElementById('totalServices'), avgSalePriceEl: document.getElementById('avgSalePrice'), avgVolumeEl: document.getElementById('avgVolume'), selectPlanBtn: document.getElementById('selectPlanBtn'), planSelectorModal: document.getElementById('planSelectorModal'), closePlanModalBtn: document.getElementById('closePlanModalBtn'), planSelectorContent: document.getElementById('planSelectorContent'), yebekhePercentageInput: document.getElementById('yebekhePercentage'), yebekheResultEl: document.getElementById('yebekheResult'), additionalCostsInput: document.getElementById('additionalCosts'), netRevenueResultEl: document.getElementById('netRevenueResult'),
+                };
+
+                // --- INITIALIZATION ---
+                function init() {
+                    populatePlanSelectorModal(); checkMonthlyQuota(); initializeChart(); updateDashboard(); setupEventListeners();
+                }
+
+                // --- EVENT LISTENERS ---
+                function setupEventListeners() {
+                    dom.quotaForm.addEventListener('submit', handleQuotaSubmit); dom.salesForm.addEventListener('submit', handleSaleSubmit); dom.exportBtn.addEventListener('click', exportToCSV); dom.resetBtn.addEventListener('click', () => dom.resetConfirmModal.classList.remove('hidden')); dom.cancelResetBtn.addEventListener('click', () => dom.resetConfirmModal.classList.add('hidden')); dom.confirmResetBtn.addEventListener('click', handleConfirmReset); dom.selectPlanBtn.addEventListener('click', openPlanModal); dom.closePlanModalBtn.addEventListener('click', closePlanModal); dom.planSelectorContent.addEventListener('click', handlePlanSelection); dom.yebekhePercentageInput.addEventListener('input', updateNetRevenue); dom.additionalCostsInput.addEventListener('input', updateNetRevenue);
+                }
+
+                // --- UI & DATA FUNCTIONS ---
+                function populatePlanSelectorModal() {
+                    const plansByVolume = servicePlans.reduce((acc, plan, index) => {
+                        const volume = plan.volume;
+                        if (!acc[volume]) acc[volume] = [];
+                        acc[volume].push({ ...plan, originalIndex: index });
+                        return acc;
+                    }, {});
+
+                    dom.planSelectorContent.innerHTML = '';
+                    for (const volume in plansByVolume) {
+                        const group = plansByVolume[volume];
+                        let groupHtml = `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-3">${volume}GB Plans</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        `;
+                        group.forEach(plan => {
+                            groupHtml += `
+                                <div class="plan-card" data-plan-index="${plan.originalIndex}">
+                                    <p class="font-semibold text-gray-800">${plan.name.split('-')[1].trim()}</p>
+                                    <p class="text-sm text-gray-500">${plan.name.split('-')[0].trim()}</p>
+                                    <p class="text-xl font-bold text-indigo-600 mt-2">${plan.price.toLocaleString()} Toman</p>
+                                </div>
+                            `;
+                        });
+                        groupHtml += `</div></div>`;
+                        dom.planSelectorContent.innerHTML += groupHtml;
+                    }
+                }
+
+                function openPlanModal() {
+                    dom.planSelectorModal.classList.remove('hidden');
+                    setTimeout(() => dom.planSelectorModal.classList.remove('opacity-0'), 10);
+                }
+
+                function closePlanModal() {
+                    dom.planSelectorModal.classList.add('opacity-0');
+                    setTimeout(() => dom.planSelectorModal.classList.add('hidden'), 300);
+                }
+
+                function handlePlanSelection(e) {
+                    const card = e.target.closest('.plan-card');
+                    if (!card) return;
+                    const planIndex = card.dataset.planIndex;
+                    const plan = servicePlans[planIndex];
+                    
+                    state.selectedPlanIndex = planIndex;
+                    dom.serviceNameInput.value = plan.name;
+                    dom.salePriceInput.value = plan.price;
+                    dom.dataVolumeInput.value = plan.volume;
+                    dom.selectPlanBtn.textContent = plan.name;
+                    dom.selectPlanBtn.classList.remove('text-gray-500');
+                    dom.selectPlanBtn.classList.add('text-gray-900');
+                    
+                    closePlanModal();
+                }
+
+                function checkMonthlyQuota() {
+                    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+                    if (state.monthlyQuota.month !== currentMonth) dom.quotaModal.classList.remove('hidden');
+                }
+
+                function handleQuotaSubmit(e) {
+                    e.preventDefault();
+                    const quotaValue = parseFloat(document.getElementById('monthlyQuotaInput').value);
+                    if (!isNaN(quotaValue) && quotaValue > 0) {
+                        state.monthlyQuota = { value: quotaValue, month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }) };
+                        localStorage.setItem('vpnMonthlyQuota', JSON.stringify(state.monthlyQuota));
+                        dom.quotaModal.classList.add('hidden'); updateDashboard();
+                    }
+                }
+
+                function handleSaleSubmit(e) {
+                    e.preventDefault();
+                    if (state.selectedPlanIndex === null) {
+                        alert("Please select a VPN plan first.");
+                        return;
+                    }
+                    const plan = servicePlans[state.selectedPlanIndex];
+                    state.sales.push({ id: Date.now(), serviceName: plan.name, price: plan.price, volume: plan.volume, date: new Date().toISOString() });
+                    localStorage.setItem('vpnSales', JSON.stringify(state.sales));
+                    updateDashboard(); 
+                    
+                    // Reset form
+                    dom.salesForm.reset();
+                    dom.selectPlanBtn.textContent = 'Select VPN Plan';
+                    dom.selectPlanBtn.classList.add('text-gray-500');
+                    dom.selectPlanBtn.classList.remove('text-gray-900');
+                    state.selectedPlanIndex = null;
+                }
+
+                function updateDashboard() {
+                    updateKPIs(); updateAnalytics(); updateChart(); updateRecentSalesTable(); updateNetRevenue();
+                    lucide.createIcons();
+                }
+
+                function updateKPIs() {
+                    const totalRevenue = state.sales.reduce((sum, sale) => sum + sale.price, 0);
+                    const totalVolumeSold = state.sales.reduce((sum, sale) => sum + sale.volume, 0);
+                    const remainingVolume = state.monthlyQuota.value - totalVolumeSold;
+                    const quotaUsedPercent = state.monthlyQuota.value > 0 ? ((totalVolumeSold / state.monthlyQuota.value) * 100).toFixed(1) : 0;
+
+                    dom.totalRevenueEl.textContent = `${totalRevenue.toLocaleString()} Toman`;
+                    dom.totalSalesEl.textContent = `${state.sales.length} sales recorded`;
+                    dom.totalVolumeSoldEl.textContent = `${totalVolumeSold.toLocaleString()} GB`;
+                    dom.monthlyQuotaEl.textContent = `${state.monthlyQuota.value.toLocaleString()} GB`;
+                    dom.quotaUsedEl.textContent = `${quotaUsedPercent}% used`;
+                    dom.remainingVolumeEl.textContent = `${remainingVolume.toLocaleString()} GB`;
+
+                    if (remainingVolume <= 0) {
+                        dom.remainingStatusEl.textContent = 'Exceeded'; dom.remainingStatusEl.className = 'text-sm font-medium text-red-600';
+                    } else if (quotaUsedPercent >= 80) {
+                        dom.remainingStatusEl.textContent = 'Low'; dom.remainingStatusEl.className = 'text-sm font-medium text-yellow-600';
+                    } else {
+                        dom.remainingStatusEl.textContent = 'Available'; dom.remainingStatusEl.className = 'text-sm font-medium text-green-600';
+                    }
+                }
+
+                function updateAnalytics() {
+                    if (state.sales.length === 0) {
+                        dom.mostPopularServiceEl.textContent = '-'; dom.leastPopularServiceEl.textContent = '-'; dom.totalServicesEl.textContent = '0'; dom.avgSalePriceEl.textContent = '0 Toman'; dom.avgVolumeEl.textContent = '0 GB'; return;
+                    }
+                    const serviceCounts = state.sales.reduce((acc, sale) => { acc[sale.serviceName] = (acc[sale.serviceName] || 0) + 1; return acc; }, {});
+                    const sortedServices = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1]);
+                    const uniqueServices = new Set(state.sales.map(s => s.serviceName));
+                    const avgPrice = state.sales.reduce((sum, s) => sum + s.price, 0) / state.sales.length;
+                    const avgVolume = state.sales.reduce((sum, s) => sum + s.volume, 0) / state.sales.length;
+
+                    dom.mostPopularServiceEl.textContent = sortedServices[0][0];
+                    dom.leastPopularServiceEl.textContent = sortedServices[sortedServices.length - 1][0];
+                    dom.totalServicesEl.textContent = uniqueServices.size;
+                    dom.avgSalePriceEl.textContent = `${avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })} Toman`;
+                    dom.avgVolumeEl.textContent = `${avgVolume.toLocaleString(undefined, { maximumFractionDigits: 1 })} GB`;
+                }
+
+                function updateRecentSalesTable() {
+                    dom.salesTableBody.innerHTML = '';
+                    const recentSales = [...state.sales].reverse().slice(0, 5);
+                    if (recentSales.length === 0) {
+                        dom.salesTableBody.innerHTML = `<tr><td class="text-center py-4 text-gray-500">No sales recorded yet.</td></tr>`; return;
+                    }
+                    recentSales.forEach(sale => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td class="py-2.5 whitespace-nowrap text-sm font-medium text-gray-800">${sale.serviceName}</td><td class="py-2.5 whitespace-nowrap text-sm text-right text-gray-500">${sale.price.toLocaleString()} Toman</td>`;
+                        dom.salesTableBody.appendChild(row);
+                    });
+                }
+
+                function initializeChart() {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    state.chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: [], datasets: [{ label: 'Total Revenue (Toman)', data: [], backgroundColor: '#A7C7E7', borderWidth: 1, borderRadius: 8 }] },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: { y: { beginAtZero: true, grid: { drawBorder: false } }, x: { grid: { display: false } } },
+                            plugins: { legend: { display: false }, title: { display: true, text: 'Revenue by Service', align: 'start', padding: { bottom: 20 }, font: { size: 20, family: 'Inter', weight: '600' }, color: '#374151' } }
+                        }
+                    });
+                }
+
+                function updateChart() {
+                    const revenueByService = state.sales.reduce((acc, sale) => { acc[sale.serviceName] = (acc[sale.serviceName] || 0) + sale.price; return acc; }, {});
+                    state.chart.data.labels = Object.keys(revenueByService);
+                    state.chart.data.datasets[0].data = Object.values(revenueByService);
+                    state.chart.update();
+                }
+                
+                function updateNetRevenue() {
+                    const percentage = parseFloat(dom.yebekhePercentageInput.value) || 0;
+                    const additionalCosts = parseFloat(dom.additionalCostsInput.value) || 0;
+                    const totalRevenue = state.sales.reduce((sum, sale) => sum + sale.price, 0);
+
+                    const yebekheAmount = (totalRevenue * percentage) / 100;
+                    dom.yebekheResultEl.textContent = `${yebekheAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} Toman`;
+
+                    const netRevenue = totalRevenue - yebekheAmount - additionalCosts;
+                    dom.netRevenueResultEl.textContent = `${netRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })} Toman`;
+                }
+
+                function handleConfirmReset() {
+                    localStorage.removeItem('vpnSales'); localStorage.removeItem('vpnMonthlyQuota');
+                    state.sales = []; state.monthlyQuota = { value: 0, month: '' };
+                    dom.resetConfirmModal.classList.add('hidden');
+                    updateDashboard(); checkMonthlyQuota();
+                }
+
+                function exportToCSV() {
+                    if (state.sales.length === 0) { console.log('No sales data to export.'); return; }
+                    const headers = 'Service Name,Price (Toman),Volume (GB),Date';
+                    const rows = state.sales.map(sale => [`"${sale.serviceName}"`, sale.price, sale.volume, new Date(sale.date).toLocaleDateString()].join(','));
+                    const csvContent = [headers, ...rows].join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url); link.setAttribute('download', 'vpn-sales-export.csv');
+                    link.style.visibility = 'hidden'; document.body.appendChild(link);
+                    link.click(); document.body.removeChild(link);
+                }
+                
+                init();
+            }
+
+            startApp();
+        });
+    </script>
+</body>
+</html>
