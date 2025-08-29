@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت فاکتور مالک</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Libraries for Excel, Zipping, and Local Storage -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+    
+    <!-- Vazirmatn Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base styles and theming inspired by shadcn/ui */
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.75rem; /* Increased radius for modern look */
+        }
+
+        .dark {
+            --background: 224 71% 4%;
+            --foreground: 210 40% 98%;
+            --card: 224 71% 4%;
+            --card-foreground: 210 40% 98%;
+            --popover: 224 71% 4%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 210 40% 98%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: hsl(var(--secondary)); }
+        ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+        
+        /* Motion & Animations */
+        @media (prefers-reduced-motion: no-preference) {
+            .modal-content, .toast {
+                animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .toast.fade-out {
+                animation: slide-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+        }
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slide-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-black">
+    <div id="app" class="flex h-screen antialiased text-gray-800 dark:text-gray-200">
+        <!-- Sidebar for Employers -->
+        <aside class="w-72 flex-shrink-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 flex flex-col">
+            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+                <h1 class="text-lg font-bold text-gray-800 dark:text-white">کارفرماها</h1>
+                <button id="add-employer-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="افزودن کارفرما جدید">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                </button>
+            </div>
+            <nav id="employers-list" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0">
+                <div id="active-employer-header" class="flex items-center gap-3"></div>
+                <div class="flex items-center gap-3">
+                    <button id="export-excel-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">خروجی اکسل</button>
+                    <button id="export-html-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">خروجی کارفرما (HTML)</button>
+                </div>
+            </header>
+
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Items List -->
+                <section class="flex-1 flex flex-col overflow-y-auto p-6">
+                    <div class="mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+                        <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                            <div class="md:col-span-2"><label for="item-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام آیتم</label><input type="text" id="item-name" placeholder="مثال: دستمزد نصب" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
+                            <div><label for="item-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ (ریال)</label><input type="text" id="item-amount" placeholder="مثال: ۱,۲۰۰,۰۰۰" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
+                            <div><label for="item-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع</label><select id="item-type" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="expense">هزینه</option><option value="received">دریافتی</option></select></div>
+                            <button type="submit" class="w-full h-10 px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">افزودن آیتم</button>
+                        </form>
+                    </div>
+
+                    <div class="flex-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800"><thead class="bg-gray-50 dark:bg-gray-800/50"><tr><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نام آیتم</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">مبلغ</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نوع</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">پیوست</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">گزارش کارفرما</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">عملیات</span></th></tr></thead><tbody id="items-list" class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"></tbody></table></div>
+                        <div id="empty-state" class="hidden text-center py-24 px-6"><svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">برای شروع یک آیتم جدید اضافه کنید.</p></div>
+                    </div>
+                </section>
+
+                <aside class="w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-6 flex flex-col gap-6">
+                    <h2 class="text-xl font-bold">خلاصه حساب</h2>
+                    <div id="summary-card" class="space-y-4"></div>
+                    <div class="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800"><h3 class="text-md font-semibold mb-3">تنظیمات پیشرفته</h3><button id="delete-all-data-btn" class="w-full px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">پاک کردن تمام داده ها</button></div>
+                </aside>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modals & Toasts -->
+    <div id="employer-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 transition-opacity duration-300">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md"><h3 id="employer-modal-title" class="text-lg font-bold mb-4 dark:text-gray-100">افزودن کارفرما</h3><form id="employer-form"><input type="hidden" id="employer-id"><div><label for="employer-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام کارفرما</label><input type="text" id="employer-name" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 transition"></div><div class="mt-6 flex justify-end gap-3"><button type="button" id="cancel-employer-modal" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">انصراف</button><button type="submit" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">ذخیره</button></div></form></div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 transition-opacity duration-300">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm"><h3 class="text-lg font-bold dark:text-gray-100">تایید عملیات</h3><p id="confirm-modal-text" class="text-sm text-gray-500 dark:text-gray-400 my-4"></p><div class="flex justify-end gap-3"><button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">انصراف</button><button id="confirm-accept" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">تایید</button></div></div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-3"></div>
+
+<script type="module">
+// ... existing JS code from previous turn, with the following modifications ...
+// I will apply the changes directly into the script block.
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// App Initialization & DOM Elements
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+const dom = {
+    // ... same as before
+    app: document.getElementById('app'),
+    employersList: document.getElementById('employers-list'),
+    addEmployerBtn: document.getElementById('add-employer-btn'),
+    activeEmployerHeader: document.getElementById('active-employer-header'),
+    itemsList: document.getElementById('items-list'),
+    emptyState: document.getElementById('empty-state'),
+    addItemForm: document.getElementById('add-item-form'),
+    summaryCard: document.getElementById('summary-card'),
+    exportExcelBtn: document.getElementById('export-excel-btn'),
+    exportHtmlBtn: document.getElementById('export-html-btn'),
+    deleteAllDataBtn: document.getElementById('delete-all-data-btn'),
+    // Modals & Toasts
+    employerModal: document.getElementById('employer-modal'),
+    employerModalTitle: document.getElementById('employer-modal-title'),
+    employerForm: document.getElementById('employer-form'),
+    employerIdInput: document.getElementById('employer-id'),
+    employerNameInput: document.getElementById('employer-name'),
+    cancelEmployerModalBtn: document.getElementById('cancel-employer-modal'),
+    confirmModal: document.getElementById('confirm-modal'),
+    confirmModalText: document.getElementById('confirm-modal-text'),
+    confirmCancelBtn: document.getElementById('confirm-cancel'),
+    confirmAcceptBtn: document.getElementById('confirm-accept'),
+    toastContainer: document.getElementById('toast-container'),
+};
+
+let state = {};
+let confirmCallback = null; // To store the action for the confirmation modal
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadState();
+    initializeApp();
+    setupEventListeners();
+});
+
+function initializeApp() {
+    if (!state.employers || state.employers.length === 0) {
+        showWelcomeState();
+    } else {
+        if (!state.activeEmployerId || !state.employers.find(e => e.id === state.activeEmployerId)) {
+            state.activeEmployerId = state.employers[0].id;
+        }
+    }
+    render();
+}
+
+function showWelcomeState() {
+    dom.activeEmployerHeader.innerHTML = `<h2 class="text-xl font-bold">خوش آمدید</h2>`;
+    dom.itemsList.innerHTML = '';
+    dom.emptyState.classList.remove('hidden');
+    dom.summaryCard.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">برای شروع یک کارفرما اضافه کنید.</p>';
+    dom.exportExcelBtn.disabled = true;
+    dom.exportHtmlBtn.disabled = true;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// State Management & Persistence (localForage)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+const defaultState = {
+    employers: [],
+    settings: {
+        currency: 'IRR',
+        supervisionPercent: 0.15,
+        supervisionBase: 'received'
+    },
+    activeEmployerId: null,
+};
+
+async function loadState() {
+    const savedState = await localforage.getItem('invoiceManagerData');
+    state = savedState ? { ...defaultState, ...savedState } : { ...defaultState };
+}
+
+async function saveState() {
+    await localforage.setItem('invoiceManagerData', state);
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Rendering Functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+function render() {
+    if (!state.employers || state.employers.length === 0) {
+        showWelcomeState();
+        renderEmployersList();
+        return;
+    }
+    renderEmployersList();
+    const activeEmployer = getActiveEmployer();
+    if (activeEmployer) {
+        renderActiveEmployerHeader(activeEmployer);
+        renderItemsList(activeEmployer.items);
+        renderSummary(activeEmployer);
+        dom.exportExcelBtn.disabled = false;
+        dom.exportHtmlBtn.disabled = false;
+    } else {
+        showWelcomeState();
+    }
+    saveState();
+}
+
+function renderEmployersList() {
+    dom.employersList.innerHTML = state.employers.map(employer => `
+        <a href="#" data-id="${employer.id}" class="employer-link group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${state.activeEmployerId === employer.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}">
+            <span>${employer.name}</span>
+             <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+        </a>
+    `).join('');
+}
+
+function renderActiveEmployerHeader(employer) {
+    dom.activeEmployerHeader.innerHTML = `<div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300">${employer.name.charAt(0)}</div><div><h2 class="text-xl font-bold">${employer.name}</h2><p class="text-xs text-gray-500">${employer.items.length} آیتم</p></div>`;
+}
+
+function renderItemsList(items) {
+    if (items.length === 0) {
+        dom.itemsList.innerHTML = '';
+        dom.emptyState.classList.remove('hidden');
+        return;
+    }
+    dom.emptyState.classList.add('hidden');
+    dom.itemsList.innerHTML = items.map(item => `
+        <tr class="item-row hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${item.id}">
+            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900 dark:text-white">${item.name}</div></td>
+            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500 dark:text-gray-300">${formatCurrency(item.amount)}</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${item.attachment ? `<button data-action="preview-attachment" title="${item.attachment.filename}" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-800">${item.attachment.filename.substring(0, 15)}...</button>` : `<label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">بارگذاری<input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf"></label>`}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${item.isParent ? 'checked' : ''} class="sr-only peer" data-action="toggle-parent"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div></label></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-left"><button data-action="delete-item" class="p-2 text-gray-400 hover:text-red-500 rounded-md"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td>
+        </tr>`).join('');
+}
+
+function renderSummary(employer) {
+    const summary = calculateSummary(employer.items);
+    dom.summaryCard.innerHTML = `<div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع خرج کرد</span><span class="font-semibold text-red-600">${formatCurrency(summary.totalExpenses)}</span></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع دریافتی</span><span class="font-semibold text-green-600">${formatCurrency(summary.totalReceived)}</span></div><div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3"><div class="flex justify-between items-center text-sm"><label for="supervision-percent" class="text-gray-500 dark:text-gray-400">درصد نظارت</label><div class="flex items-center"><input type="text" inputmode="decimal" id="supervision-percent" value="${state.settings.supervisionPercent * 100}" class="w-16 text-left bg-gray-100 dark:bg-gray-700 dark:text-gray-200 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500" /><span class="mr-1">%</span></div></div><div class="text-sm"><label class="text-gray-500 dark:text-gray-400 block mb-2">مبنای نظارت</label><div class="flex gap-2"><button data-value="received" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'received' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">دریافتی</button><button data-value="expenses" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'expenses' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">خرج کرد</button></div></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">مبلغ نظارت</span><span class="font-semibold">${formatCurrency(summary.supervisionFee)}</span></div></div><div class="pt-4 mt-4 border-t-2 border-gray-300 dark:border-gray-600 flex justify-between items-center text-lg"><span class="font-bold">مانده نهایی</span><span class="font-bold text-xl ${summary.netBalance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-500'}">${formatCurrency(summary.netBalance)}</span></div>`;
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Event Handlers
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+function setupEventListeners() {
+    dom.addEmployerBtn.addEventListener('click', () => openEmployerModal());
+    dom.employerForm.addEventListener('submit', handleEmployerFormSubmit);
+    dom.cancelEmployerModalBtn.addEventListener('click', () => closeEmployerModal());
+    dom.employersList.addEventListener('click', handleEmployerActions);
+    dom.addItemForm.addEventListener('submit', handleAddItem);
+    dom.itemsList.addEventListener('click', handleItemActions);
+    dom.itemsList.addEventListener('change', handleItemActions);
+    dom.summaryCard.addEventListener('change', handleSettingsChange);
+    dom.summaryCard.addEventListener('click', handleSettingsChange);
+    dom.exportExcelBtn.addEventListener('click', handleExportExcel);
+    dom.exportHtmlBtn.addEventListener('click', handleExportHTMLZip);
+    dom.deleteAllDataBtn.addEventListener('click', handleDeleteAllData);
+    dom.confirmCancelBtn.addEventListener('click', closeConfirmModal);
+    dom.confirmAcceptBtn.addEventListener('click', () => {
+        if (confirmCallback) confirmCallback();
+        closeConfirmModal();
+    });
+}
+
+function handleEmployerFormSubmit(e) { e.preventDefault(); const name = dom.employerNameInput.value.trim(); if (!name) return; const newEmployer = { id: generateId(), name, items: [] }; state.employers.push(newEmployer); state.activeEmployerId = newEmployer.id; closeEmployerModal(); render(); showToast('کارفرما با موفقیت اضافه شد.'); }
+
+function handleEmployerActions(e) {
+    const link = e.target.closest('.employer-link');
+    const deleteBtn = e.target.closest('[data-action="delete-employer"]');
+    if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const employerId = deleteBtn.dataset.employerId;
+        const employer = state.employers.find(emp => emp.id === employerId);
+        openConfirmModal(`آیا از حذف کارفرمای "${employer.name}" و تمام آیتم‌های آن مطمئن هستید؟`, () => {
+            state.employers = state.employers.filter(emp => emp.id !== employerId);
+            if (state.activeEmployerId === employerId) {
+                state.activeEmployerId = state.employers.length > 0 ? state.employers[0].id : null;
+            }
+            render();
+            showToast('کارفرما حذف شد.', 'destructive');
+        });
+    } else if (link) {
+        e.preventDefault();
+        state.activeEmployerId = link.dataset.id;
+        render();
+    }
+}
+
+function handleAddItem(e) { e.preventDefault(); const name = dom.addItemForm.querySelector('#item-name').value.trim(); const amount = normalizePersianNumber(dom.addItemForm.querySelector('#item-amount').value); const type = dom.addItemForm.querySelector('#item-type').value; if (!name || isNaN(amount) || amount <= 0) { showToast('لطفا نام و مبلغ معتبر وارد کنید.', 'destructive'); return; } const activeEmployer = getActiveEmployer(); if (!activeEmployer) return; activeEmployer.items.push({ id: generateId(), name, amount, type, isParent: false, attachment: null, createdAt: new Date().toISOString() }); dom.addItemForm.reset(); dom.addItemForm.querySelector('#item-name').focus(); render(); showToast('آیتم جدید اضافه شد.'); }
+
+async function handleItemActions(e) {
+    const actionElement = e.target.closest('[data-action]');
+    if (!actionElement) return;
+    const itemRow = actionElement.closest('.item-row');
+    const itemId = itemRow?.dataset.id;
+    const item = getActiveEmployer()?.items.find(i => i.id === itemId);
+    if (!item) return;
+    switch (actionElement.dataset.action) {
+        case 'delete-item':
+            openConfirmModal(`آیا از حذف آیتم "${item.name}" مطمئن هستید؟`, () => {
+                const employer = getActiveEmployer();
+                employer.items = employer.items.filter(i => i.id !== itemId);
+                render();
+                showToast('آیتم حذف شد.', 'destructive');
+            });
+            break;
+        case 'toggle-parent': item.isParent = e.target.checked; saveState(); break;
+        case 'upload-attachment': await handleFileUpload(e.target.files[0], item); break;
+        case 'preview-attachment': previewAttachment(item.attachment); break;
+    }
+}
+
+async function handleFileUpload(file, item) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { showToast('حجم فایل نباید بیشتر از ۱۰ مگابایت باشد.', 'destructive'); return; }
+    try {
+        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+        item.attachment = { filename: file.name, type: file.type, dataUrl: dataUrl };
+        render();
+        showToast('فایل با موفقیت بارگذاری شد.');
+    } catch (error) { console.error("File read error:", error); showToast("خطا در بارگذاری فایل.", 'destructive'); }
+}
+
+function handleSettingsChange(e) { const t = e.target; if (t.id === 'supervision-percent') { const p = parseFloat(t.value); if (!isNaN(p) && p >= 0) state.settings.supervisionPercent = p / 100; } else if (t.matches('.supervision-base-toggle')) { state.settings.supervisionBase = t.dataset.value; } render(); }
+
+function handleDeleteAllData() { openConfirmModal("این عمل تمام داده‌ها را پاک می‌کند. آیا مطمئن هستید؟", () => { state = { ...defaultState }; localforage.removeItem('invoiceManagerData').then(() => { initializeApp(); showToast('تمام داده‌ها پاک شد.', 'destructive'); }); }); }
+
+function handleExportExcel() { const e = getActiveEmployer(); if (e) exportToExcel(e); }
+function handleExportHTMLZip() { const e = getActiveEmployer(); if (e) exportToHTMLZip(e); }
+
+// Core Logic & Calculations, Export Functions, etc. (mostly unchanged from previous version)
+const getActiveEmployer = () => state.employers.find(e => e.id === state.activeEmployerId);
+function calculateSummary(items) { const totalExpenses = items.filter(i => i.type === 'expense').reduce((s, i) => s + i.amount, 0); const totalReceived = items.filter(i => i.type === 'received').reduce((s, i) => s + i.amount, 0); const baseValue = state.settings.supervisionBase === 'received' ? totalReceived : totalExpenses; const supervisionFee = Math.round(baseValue * state.settings.supervisionPercent); const netBalance = totalReceived - totalExpenses - supervisionFee; return { totalExpenses, totalReceived, supervisionFee, netBalance }; }
+function normalizePersianNumber(str) { if (!str) return NaN; const p = '۰۱۲۳۴۵۶۷۸۹', a = '٠١٢٣٤٥٦٧٨٩'; return parseFloat(String(str).replace(/[, ریال\s]/g, '').split('').map(c => p.indexOf(c) !== -1 ? p.indexOf(c) : (a.indexOf(c) !== -1 ? a.indexOf(c) : c)).join('')); }
+function formatCurrency(num) { return new Intl.NumberFormat('fa-IR').format(num) + ' ریال'; }
+function previewAttachment(attachment) { const blob = base64ToBlob(attachment.dataUrl.split(',')[1], attachment.type); const url = URL.createObjectURL(blob); window.open(url, '_blank'); }
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// New Modal, Toast, and Utility Functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function openEmployerModal() { dom.employerForm.reset(); dom.employerModalTitle.textContent = 'افزودن کارفرما'; dom.employerModal.classList.remove('hidden'); dom.employerModal.classList.add('flex'); }
+function closeEmployerModal() { dom.employerModal.classList.add('hidden'); dom.employerModal.classList.remove('flex'); }
+
+function openConfirmModal(message, onConfirm) { dom.confirmModalText.textContent = message; confirmCallback = onConfirm; dom.confirmModal.classList.remove('hidden'); dom.confirmModal.classList.add('flex'); }
+function closeConfirmModal() { dom.confirmModal.classList.add('hidden'); dom.confirmModal.classList.remove('flex'); confirmCallback = null; }
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    const isDestructive = type === 'destructive';
+    toast.className = `toast flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse rounded-xl shadow-lg transition-all duration-300 ${isDestructive ? 'bg-red-50 text-red-700 dark:bg-red-900/60 dark:text-red-200' : 'bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`;
+    toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${isDestructive ? 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200' : 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200'} rounded-lg"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">${isDestructive ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />' : '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />'}</svg></div><div class="ms-3 text-sm font-normal">${message}</div>`;
+    dom.toastContainer.appendChild(toast);
+    setTimeout(() => { toast.classList.add('fade-out'); toast.addEventListener('animationend', () => toast.remove()); }, 3000);
+}
+
+// Export functions and utilities (unchanged)
+function exportToExcel(employer) {
+    const data = [];
+    data.push([`فاکتور ${employer.name}`]);
+    data.push([]);
+    data.push(['عنوان', '', '', '', '', '', 'مبلغ']);
+    employer.items.forEach(item => {
+        data.push([
+            item.name,
+            null,
+            null,
+            null,
+            null,
+            null,
+            new Intl.NumberFormat('en-US').format(item.amount).replace(/,/g, '/')
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!RTL'] = true;
+
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
+
+    ws['!cols'] = [
+        { wch: 50 },
+        { wch: 8 },
+        { wch: 8 },
+        { wch: 8 },
+        { wch: 8 },
+        { wch: 8 },
+        { wch: 20 }
+    ];
+
+    const titleCell = ws['A1'];
+    if (titleCell) {
+        titleCell.s = {
+            font: { sz: 16, bold: true },
+            alignment: { horizontal: "center", vertical: "center" }
+        };
+    }
+    
+    const headerCellA = ws['A3'];
+    const headerCellG = ws['G3'];
+    const headerStyle = {
+        font: { bold: true },
+        alignment: { horizontal: "center" }
+    };
+    if(headerCellA) headerCellA.s = headerStyle;
+    if(headerCellG) headerCellG.s = headerStyle;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "فاکتور");
+    XLSX.writeFile(wb, `فاکتور-${employer.name}.xlsx`);
+}
+
+async function exportToHTMLZip(employer) {
+    const parentItems = employer.items.filter(item => item.isParent);
+    const summary = calculateSummary(employer.items);
+    const zip = new JSZip();
+    let attachmentsHtml = '';
+
+    parentItems.forEach(item => {
+        let attachmentCellHtml = `<td style="padding: 12px; text-align: center;">-</td>`;
+        if (item.attachment) {
+            const blob = base64ToBlob(item.attachment.dataUrl.split(',')[1], item.attachment.type);
+            zip.file(`attachments/${item.attachment.filename}`, blob);
+            attachmentCellHtml = `<td style="padding: 12px; text-align: center;"><a href="attachments/${item.attachment.filename}" download="${item.attachment.filename}" style="text-decoration: none; background-color: #007bff; color: white; padding: 5px 12px; border-radius: 5px; font-size: 12px;">دانلود پیوست</a></td>`;
+        }
+        attachmentsHtml += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px;">${item.name}</td><td style="padding: 12px; text-align: left;">${formatCurrency(item.amount)}</td>${attachmentCellHtml}</tr>`;
+    });
+
+    const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد'}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>مانده نهایی:</b></td><td><b>${formatCurrency(summary.netBalance)}</b></td></tr></table><h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div></body></html>`;
+    zip.file(`گزارش-${employer.name}.html`, htmlContent);
+    const content = await zip.generateAsync({
+        type: "blob"
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = `گزارش-کامل-${employer.name}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const base64ToBlob = (base64, mimeType) => { const byteCharacters = atob(base64); const byteNumbers = new Array(byteCharacters.length); for (let i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); } const byteArray = new Uint8Array(byteNumbers); return new Blob([byteArray], { type: mimeType }); };
+
+</script>
+</body>
+</html>
+
