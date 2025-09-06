@@ -106,67 +106,77 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-black">
-    <div id="app" class="flex h-screen antialiased text-gray-800 dark:text-gray-200">
+<body class="bg-gray-50">
+    <div id="app" class="flex h-screen antialiased text-gray-800">
         <!-- Sidebar for Employers -->
-        <aside class="w-72 flex-shrink-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 flex flex-col">
-            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-                <h1 class="text-lg font-bold text-gray-800 dark:text-white">کارفرماها</h1>
-                <button id="add-employer-btn" class="p-2 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="افزودن کارفرما جدید"><i class="fas fa-plus"></i></button>
+        <aside class="w-72 flex-shrink-0 border-l border-gray-200 bg-white flex flex-col">
+            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 flex-shrink-0">
+                <h1 class="text-lg font-bold text-gray-800">کارفرماها</h1>
+                <button id="add-employer-btn" class="p-2 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors" title="افزودن کارفرما جدید"><i class="fas fa-plus"></i></button>
             </div>
             <nav id="employers-list" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0">
+            <header class="h-16 bg-white/80 backdrop-blur-sm border-b flex items-center justify-between px-6 flex-shrink-0">
                 <div id="active-employer-header" class="flex items-center gap-3"></div>
                 <div class="flex items-center gap-3">
-                    <button id="export-excel-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">خروجی اکسل</button>
-                    <button id="export-html-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">خروجی کارفرما (HTML)</button>
+                    <button id="export-excel-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300">خروجی اکسل</button>
+                    <button id="export-html-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all disabled:opacity-50 border border-gray-300">خروجی کارفرما (HTML)</button>
                 </div>
             </header>
 
             <div class="flex-1 flex overflow-hidden">
                 <!-- Items List -->
                 <section class="flex-1 flex flex-col p-6">
-                    <div class="mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <div class="mb-6 bg-white p-4 rounded-xl border border-gray-200">
                         <form id="item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                             <input type="hidden" id="edit-item-id">
-                            <div class="md:col-span-2"><label for="item-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام آیتم</label><input type="text" id="item-name" placeholder="مثال: دستمزد نصب" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
-                            <div><label for="item-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ (ریال)</label><input type="text" id="item-amount" placeholder="مثال: ۱,۲۰۰,۰۰۰" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
-                            <div><label for="item-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع</label><select id="item-type" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="expense">هزینه</option><option value="received">دریافتی</option></select></div>
+                            <div class="md:col-span-2"><label for="item-name" class="block text-sm font-medium text-gray-700 mb-1">نام آیتم</label><input type="text" id="item-name" placeholder="مثال: دستمزد نصب" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
+                            <div><label for="item-amount" class="block text-sm font-medium text-gray-700 mb-1">مبلغ (ریال)</label><input type="text" id="item-amount" placeholder="مثال: ۱,۲۰۰,۰۰۰" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
+                            <div><label for="item-type" class="block text-sm font-medium text-gray-700 mb-1">نوع</label><select id="item-type" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="expense">هزینه</option><option value="received">دریافتی</option></select></div>
                             <div class="flex items-center gap-2">
-                                <button type="submit" id="item-submit-btn" class="w-full h-10 px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">افزودن آیتم</button>
-                                <button type="button" id="cancel-edit-btn" class="hidden h-10 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">انصراف</button>
+                                <button type="submit" id="item-submit-btn" class="w-full h-10 px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300">افزودن آیتم</button>
+                                <button type="button" id="cancel-edit-btn" class="hidden h-10 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300">انصراف</button>
                             </div>
                         </form>
                     </div>
 
-                    <div class="flex-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+                    <div class="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
                         <div class="overflow-x-auto overflow-y-auto flex-1 hide-scrollbar">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                                <thead class="bg-gray-50/80 dark:bg-gray-800/50 sticky top-0 backdrop-blur-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50/80 sticky top-0 backdrop-blur-sm">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نام آیتم</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">مبلغ</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نوع</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">پیوست</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">گزارش کارفرما</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">عملیات</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام آیتم</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مبلغ</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">پیوست</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">گزارش کارفرما</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
                                     </tr>
                                 </thead>
-                                <tbody id="items-list" class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"></tbody>
+                                <tbody id="items-list" class="bg-white divide-y divide-gray-200"></tbody>
                             </table>
                         </div>
-                        <div id="empty-state" class="hidden text-center py-24 px-6"><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">برای شروع یک آیتم جدید اضافه کنید.</p></div>
+                        <div id="empty-state" class="hidden text-center py-24 px-6"><h3 class="mt-4 text-sm font-semibold text-gray-900">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500">برای شروع یک آیتم جدید اضافه کنید.</p></div>
                     </div>
                 </section>
 
-                <aside class="w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-6 flex flex-col gap-6">
+                <aside class="w-80 flex-shrink-0 border-r border-gray-200 bg-white p-6 flex flex-col gap-6">
                     <h2 class="text-xl font-bold">خلاصه حساب</h2>
                     <div id="summary-card" class="space-y-4"></div>
-                    <div class="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800"><h3 class="text-md font-semibold mb-3">تنظیمات پیشرفته</h3><button id="delete-all-data-btn" class="w-full px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">پاک کردن تمام داده ها</button></div>
+                    <div id="payment-profile-selector-container" class="pt-4 border-t border-gray-200">
+                        <label for="payment-profile-select" class="text-md font-semibold mb-3 block">پروفایل پرداخت خروجی</label>
+                        <select id="payment-profile-select" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></select>
+                    </div>
+                    <div class="mt-auto pt-6 border-t border-gray-200">
+                        <h3 class="text-md font-semibold mb-3">تنظیمات پیشرفته</h3>
+                        <div class="space-y-2">
+                             <button id="manage-payment-profiles-btn" class="w-full px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300">مدیریت پروفایل‌های پرداخت</button>
+                             <button id="delete-all-data-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all border border-transparent">پاک کردن تمام داده ها</button>
+                        </div>
+                    </div>
                 </aside>
             </div>
         </main>
@@ -174,14 +184,43 @@
     
     <!-- Modals & Toasts -->
     <div id="employer-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 transition-opacity duration-300">
-        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md"><h3 id="employer-modal-title" class="text-lg font-bold mb-4 dark:text-gray-100">افزودن کارفرما</h3><form id="employer-form"><input type="hidden" id="employer-id"><div><label for="employer-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام کارفرما</label><input type="text" id="employer-name" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 transition"></div><div class="mt-6 flex justify-end gap-3"><button type="button" id="cancel-employer-modal" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">انصراف</button><button type="submit" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">ذخیره</button></div></form></div>
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-md"><h3 id="employer-modal-title" class="text-lg font-bold mb-4">افزودن کارفرما</h3><form id="employer-form"><input type="hidden" id="employer-id"><div><label for="employer-name" class="block text-sm font-medium text-gray-700 mb-1">نام کارفرما</label><input type="text" id="employer-name" required class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition"></div><div class="mt-6 flex justify-end gap-3"><button type="button" id="cancel-employer-modal" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300">انصراف</button><button type="submit" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300">ذخیره</button></div></form></div>
     </div>
 
-    <div id="confirm-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 transition-opacity duration-300">
-        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm"><h3 class="text-lg font-bold dark:text-gray-100">تایید عملیات</h3><p id="confirm-modal-text" class="text-sm text-gray-500 dark:text-gray-400 my-4"></p><div class="flex justify-end gap-3"><button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">انصراف</button><button id="confirm-accept" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">تایید</button></div></div>
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] transition-opacity duration-300">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-sm"><h3 class="text-lg font-bold">تایید عملیات</h3><p id="confirm-modal-text" class="text-sm text-gray-500 my-4"></p><div class="flex justify-end gap-3"><button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300">انصراف</button><button id="confirm-accept" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition border border-gray-300">تایید</button></div></div>
+    </div>
+    
+    <div id="payment-profiles-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 transition-opacity duration-300">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-lg flex flex-col" style="height: 80vh;">
+            <h3 class="text-lg font-bold mb-4 flex-shrink-0">مدیریت پروفایل‌های پرداخت</h3>
+            
+            <form id="payment-profile-form" class="mb-4 p-4 border rounded-lg bg-gray-50 flex-shrink-0">
+                <input type="hidden" id="payment-profile-id">
+                <h4 id="payment-form-title" class="text-md font-semibold mb-3">افزودن پروفایل جدید</h4>
+                <div class="grid grid-cols-2 gap-4">
+                     <div><label for="profile-name" class="block text-sm font-medium text-gray-700 mb-1">نام پروفایل</label><input type="text" id="profile-name" required placeholder="مثال: حساب شخصی" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg"></div>
+                     <div><label for="profile-holder-name" class="block text-sm font-medium text-gray-700 mb-1">نام صاحب حساب</label><input type="text" id="profile-holder-name" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg"></div>
+                     <div><label for="profile-iban" class="block text-sm font-medium text-gray-700 mb-1">شماره شبا</label><input type="text" id="profile-iban" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg"></div>
+                     <div><label for="profile-card" class="block text-sm font-medium text-gray-700 mb-1">شماره کارت</label><input type="text" id="profile-card" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg"></div>
+                     <div class="col-span-2"><label for="profile-phone" class="block text-sm font-medium text-gray-700 mb-1">شماره تلفن</label><input type="text" id="profile-phone" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg"></div>
+                </div>
+                 <div class="mt-4 flex justify-end gap-3">
+                    <button type="button" id="cancel-payment-profile-edit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg">انصراف</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">ذخیره پروفایل</button>
+                 </div>
+            </form>
+
+            <div id="payment-profiles-list-container" class="flex-1 overflow-y-auto border-t pt-4">
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3 flex-shrink-0">
+                <button type="button" id="close-payment-profiles-modal-btn" class="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 border border-gray-300">بستن</button>
+            </div>
+        </div>
     </div>
 
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-3"></div>
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[70] space-y-3"></div>
 
 <script type="module">
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,6 +260,22 @@ const dom = {
     itemTypeInput: document.getElementById('item-type'),
     itemSubmitBtn: document.getElementById('item-submit-btn'),
     cancelEditBtn: document.getElementById('cancel-edit-btn'),
+    
+    // Payment Profile elements
+    managePaymentProfilesBtn: document.getElementById('manage-payment-profiles-btn'),
+    paymentProfileSelect: document.getElementById('payment-profile-select'),
+    paymentProfilesModal: document.getElementById('payment-profiles-modal'),
+    closePaymentProfilesModalBtn: document.getElementById('close-payment-profiles-modal-btn'),
+    paymentProfileForm: document.getElementById('payment-profile-form'),
+    paymentFormTitle: document.getElementById('payment-form-title'),
+    paymentProfileIdInput: document.getElementById('payment-profile-id'),
+    profileNameInput: document.getElementById('profile-name'),
+    profileHolderNameInput: document.getElementById('profile-holder-name'),
+    profileIbanInput: document.getElementById('profile-iban'),
+    profileCardInput: document.getElementById('profile-card'),
+    profilePhoneInput: document.getElementById('profile-phone'),
+    cancelPaymentProfileEditBtn: document.getElementById('cancel-payment-profile-edit-btn'),
+    paymentProfilesListContainer: document.getElementById('payment-profiles-list-container'),
 };
 
 let state = {};
@@ -247,7 +302,7 @@ function showWelcomeState() {
     dom.activeEmployerHeader.innerHTML = `<h2 class="text-xl font-bold">خوش آمدید</h2>`;
     dom.itemsList.innerHTML = '';
     dom.emptyState.classList.remove('hidden');
-    dom.summaryCard.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">برای شروع یک کارفرما اضافه کنید.</p>';
+    dom.summaryCard.innerHTML = '<p class="text-sm text-gray-500">برای شروع یک کارفرما اضافه کنید.</p>';
     dom.exportExcelBtn.disabled = true;
     dom.exportHtmlBtn.disabled = true;
 }
@@ -261,14 +316,23 @@ const defaultState = {
     settings: {
         currency: 'IRR',
         supervisionPercent: 0.15,
-        supervisionBase: 'received'
+        supervisionBase: 'received',
+        paymentProfiles: [],
+        selectedPaymentProfileId: null
     },
     activeEmployerId: null,
 };
 
 async function loadState() {
     const savedState = await localforage.getItem('invoiceManagerData');
-    state = savedState ? { ...defaultState, ...savedState } : { ...defaultState };
+    state = savedState ? { ...defaultState, ...savedState, settings: {...defaultState.settings, ...(savedState?.settings || {})} } : { ...defaultState };
+
+    if (state.employers) {
+        state.employers.forEach(emp => {
+            if (emp.supervisionPercent === undefined) emp.supervisionPercent = defaultState.settings.supervisionPercent;
+            if (emp.supervisionBase === undefined) emp.supervisionBase = defaultState.settings.supervisionBase;
+        });
+    }
 }
 
 async function saveState() {
@@ -283,74 +347,90 @@ function render() {
     if (!state.employers || state.employers.length === 0) {
         showWelcomeState();
         renderEmployersList();
-        return;
-    }
-    renderEmployersList();
-    const activeEmployer = getActiveEmployer();
-    if (activeEmployer) {
-        renderActiveEmployerHeader(activeEmployer);
-        renderItemsList(activeEmployer.items);
-        renderSummary(activeEmployer);
-        dom.exportExcelBtn.disabled = false;
-        dom.exportHtmlBtn.disabled = false;
     } else {
-        showWelcomeState();
+        renderEmployersList();
+        const activeEmployer = getActiveEmployer();
+        if (activeEmployer) {
+            renderActiveEmployerHeader(activeEmployer);
+            renderItemsList(activeEmployer.items);
+            renderSummary(activeEmployer);
+            dom.exportExcelBtn.disabled = false;
+            dom.exportHtmlBtn.disabled = false;
+        } else {
+            showWelcomeState();
+        }
     }
+    renderPaymentProfileSelector();
     saveState();
 }
 
 function renderEmployersList() {
     dom.employersList.innerHTML = state.employers.map(employer => `
-        <a href="#" data-id="${employer.id}" class="employer-link group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${state.activeEmployerId === employer.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}">
+        <a href="#" data-id="${employer.id}" class="employer-link group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${state.activeEmployerId === employer.id ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}">
             <span>${employer.name}</span>
             <span class="flex items-center gap-2">
-                <button data-action="edit-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-opacity" title="ویرایش کارفرما">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity" title="حذف کارفرما">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <button data-action="edit-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-opacity" title="ویرایش کارفرما"><i class="fas fa-edit"></i></button>
+                <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity" title="حذف کارفرما"><i class="fas fa-trash"></i></button>
             </span>
-        </a>
-    `).join('');
+        </a>`).join('');
 }
 
 function renderActiveEmployerHeader(employer) {
-    dom.activeEmployerHeader.innerHTML = `<div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300">${employer.name.charAt(0)}</div><div><h2 class="text-xl font-bold">${employer.name}</h2><p class="text-xs text-gray-500">${employer.items.length} آیتم</p></div>`;
+    dom.activeEmployerHeader.innerHTML = `<div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600">${employer.name.charAt(0)}</div><div><h2 class="text-xl font-bold">${employer.name}</h2><p class="text-xs text-gray-500">${employer.items.length} آیتم</p></div>`;
 }
 
 function renderItemsList(items) {
-    if (items.length === 0) {
-        dom.itemsList.innerHTML = '';
-        dom.emptyState.classList.add('hidden');
-        dom.emptyState.classList.remove('flex-1');
-        return;
-    }
-    dom.emptyState.classList.add('hidden');
-    dom.emptyState.classList.remove('flex-1');
-    
-    dom.itemsList.innerHTML = items.map(item => `
-        <tr class="item-row hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${item.id}">
-            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900 dark:text-white">${item.name}</div></td>
-            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500 dark:text-gray-300">${formatCurrency(item.amount)}</div></td>
-            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${item.attachment ? `<button data-action="preview-attachment" title="${item.attachment.filename}" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-800">${item.attachment.filename.substring(0, 15)}...</button>` : `<label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">بارگذاری<input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf"></label>`}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${item.isParent ? 'checked' : ''} class="sr-only peer" data-action="toggle-parent"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div></label></td>
+    dom.itemsList.innerHTML = items.length === 0 ? '' : items.map(item => `
+        <tr class="item-row hover:bg-gray-50 transition-colors" data-id="${item.id}">
+            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${item.name}</div></td>
+            <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${formatCurrency(item.amount)}</div></td>
+            <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                ${item.attachment ? `
+                    <div class="flex items-center justify-center gap-2">
+                        <button data-action="preview-attachment" title="${item.attachment.filename}" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200">${item.attachment.filename.substring(0, 15)}...</button>
+                        <button data-action="delete-attachment" class="p-1 text-red-500 hover:text-red-700 rounded-full w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200" title="حذف پیوست"><i class="fas fa-trash"></i></button>
+                    </div>
+                ` : `
+                    <label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">
+                        بارگذاری
+                        <input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf">
+                    </label>
+                `}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${item.isParent ? 'checked' : ''} class="sr-only peer" data-action="toggle-parent"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div></label></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                 <button data-action="edit-item" class="p-2 text-blue-600 hover:text-blue-900 rounded-md" title="ویرایش"><i class="fas fa-edit"></i></button>
                 <button data-action="delete-item" class="p-2 text-red-600 hover:text-red-900 rounded-md" title="حذف"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`).join('');
+    dom.emptyState.classList.toggle('hidden', items.length > 0);
 }
 
 function renderSummary(employer) {
-    const summary = calculateSummary(employer.items);
+    const summary = calculateSummary(employer);
+    const supervisionPercent = employer.supervisionPercent ?? defaultState.settings.supervisionPercent;
+    const supervisionBase = employer.supervisionBase ?? defaultState.settings.supervisionBase;
     const isDebtor = summary.netBalance < 0;
     const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
     const balanceAmountText = formatCurrency(Math.abs(summary.netBalance));
-    const balanceColorClass = isDebtor ? 'text-orange-500' : 'text-blue-600 dark:text-blue-400';
+    const balanceColorClass = isDebtor ? 'text-orange-500' : 'text-blue-600';
 
-    dom.summaryCard.innerHTML = `<div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع خرج کرد</span><span class="font-semibold text-red-600">${formatCurrency(summary.totalExpenses)}</span></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع دریافتی</span><span class="font-semibold text-green-600">${formatCurrency(summary.totalReceived)}</span></div><div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3"><div class="flex justify-between items-center text-sm"><label for="supervision-percent" class="text-gray-500 dark:text-gray-400">درصد نظارت</label><div class="flex items-center"><input type="text" inputmode="decimal" id="supervision-percent" value="${state.settings.supervisionPercent * 100}" class="w-16 text-left bg-gray-100 dark:bg-gray-700 dark:text-gray-200 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500" /><span class="mr-1">%</span></div></div><div class="text-sm"><label class="text-gray-500 dark:text-gray-400 block mb-2">مبنای نظارت</label><div class="flex gap-2"><button data-value="received" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'received' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">دریافتی</button><button data-value="expenses" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'expenses' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">خرج کرد</button></div></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">مبلغ نظارت</span><span class="font-semibold">${formatCurrency(summary.supervisionFee)}</span></div></div><div class="pt-4 mt-4 border-t-2 border-gray-300 dark:border-gray-600 flex justify-between items-center text-lg"><span class="font-bold">${balanceStatusText}</span><span class="font-bold text-xl ${balanceColorClass}">${balanceAmountText}</span></div>`;
+    dom.summaryCard.innerHTML = `<div class="flex justify-between items-center text-sm"><span class="text-gray-500">جمع خرج کرد</span><span class="font-semibold text-red-600">${formatCurrency(summary.totalExpenses)}</span></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500">جمع دریافتی</span><span class="font-semibold text-green-600">${formatCurrency(summary.totalReceived)}</span></div><div class="pt-4 border-t border-gray-200 space-y-3"><div class="flex justify-between items-center text-sm"><label for="supervision-percent" class="text-gray-500">درصد نظارت</label><div class="flex items-center"><input type="text" inputmode="decimal" id="supervision-percent" value="${supervisionPercent * 100}" class="w-16 text-left bg-gray-100 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500" /><span class="mr-1">%</span></div></div><div class="text-sm"><label class="text-gray-500 block mb-2">مبنای نظارت</label><div class="flex gap-2"><button data-value="received" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${supervisionBase === 'received' ? 'bg-gray-200 border-gray-300 text-black' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}">دریافتی</button><button data-value="expenses" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${supervisionBase === 'expenses' ? 'bg-gray-200 border-gray-300 text-black' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}">خرج کرد</button></div></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500">مبلغ نظارت</span><span class="font-semibold">${formatCurrency(summary.supervisionFee)}</span></div></div><div class="pt-4 mt-4 border-t-2 border-gray-300 flex justify-between items-center text-lg"><span class="font-bold">${balanceStatusText}</span><span class="font-bold text-xl ${balanceColorClass}">${balanceAmountText}</span></div>`;
+}
+
+function renderPaymentProfileSelector() {
+    const profiles = state.settings.paymentProfiles || [];
+    const selectedId = state.settings.selectedPaymentProfileId;
+    if (profiles.length === 0) {
+        dom.paymentProfileSelect.innerHTML = `<option value="">پروفایلی وجود ندارد</option>`;
+        dom.paymentProfileSelect.disabled = true;
+    } else {
+        dom.paymentProfileSelect.disabled = false;
+        dom.paymentProfileSelect.innerHTML = profiles.map(p =>
+            `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${p.profileName}</option>`
+        ).join('');
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,6 +462,16 @@ function setupEventListeners() {
         if (confirmCallback) confirmCallback();
         closeConfirmModal();
     });
+
+    // Payment Profile Listeners
+    dom.managePaymentProfilesBtn.addEventListener('click', openPaymentProfilesModal);
+    dom.closePaymentProfilesModalBtn.addEventListener('click', closePaymentProfilesModal);
+    dom.paymentProfileForm.addEventListener('submit', handlePaymentProfileFormSubmit);
+    dom.cancelPaymentProfileEditBtn.addEventListener('click', resetPaymentProfileForm);
+    dom.paymentProfileSelect.addEventListener('change', (e) => {
+        state.settings.selectedPaymentProfileId = e.target.value;
+        saveState();
+    });
 }
 
 function handleItemFormSubmit(e) {
@@ -390,34 +480,17 @@ function handleItemFormSubmit(e) {
     const amount = normalizePersianNumber(dom.itemAmountInput.value);
     const type = dom.itemTypeInput.value;
     const itemId = dom.editItemIdInput.value;
-
     const activeEmployer = getActiveEmployer();
-    if (!activeEmployer) {
-        showToast('لطفا ابتدا یک کارفرما ایجاد یا انتخاب کنید.', 'destructive');
-        return;
-    }
-
-    if (!name || isNaN(amount) || amount <= 0) {
-        showToast('لطفا نام و مبلغ معتبر وارد کنید.', 'destructive');
-        return;
-    }
-    
-    if (itemId) { // Editing existing item
+    if (!activeEmployer) { showToast('لطفا ابتدا یک کارفرما ایجاد یا انتخاب کنید.', 'destructive'); return; }
+    if (!name || isNaN(amount) || amount <= 0) { showToast('لطفا نام و مبلغ معتبر وارد کنید.', 'destructive'); return; }
+    if (itemId) {
         const item = activeEmployer.items.find(i => i.id === itemId);
-        if (item) {
-            item.name = name;
-            item.amount = amount;
-            item.type = type;
-        }
+        if (item) { item.name = name; item.amount = amount; item.type = type; }
         showToast('آیتم با موفقیت بروزرسانی شد.');
-    } else { // Adding new item
-        activeEmployer.items.push({
-            id: generateId(), name, amount, type,
-            isParent: false, attachment: null, createdAt: new Date().toISOString()
-        });
+    } else {
+        activeEmployer.items.push({ id: generateId(), name, amount, type, isParent: false, attachment: null, createdAt: new Date().toISOString() });
         showToast('آیتم جدید اضافه شد.');
     }
-    
     resetItemForm();
     render();
 }
@@ -427,7 +500,6 @@ function handleEditItem(item) {
     dom.itemNameInput.value = item.name;
     dom.itemAmountInput.value = new Intl.NumberFormat('en-US').format(item.amount);
     dom.itemTypeInput.value = item.type;
-    
     dom.itemSubmitBtn.textContent = 'بروزرسانی آیتم';
     dom.cancelEditBtn.classList.remove('hidden');
     dom.itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -441,77 +513,51 @@ function resetItemForm() {
     dom.cancelEditBtn.classList.add('hidden');
 }
 
-
 function handleAmountInputFormatting(e) {
     const input = e.target;
-    let value = input.value;
+    let value = input.value.replace(/,/g, '');
     const p = '۰۱۲۳۴۵۶۷۸۹'; const a = '٠١٢٣٤٥٦٧٨٩';
-    const normalizedString = value.replace(/,/g, '').split('').map(c => {
-        const pIndex = p.indexOf(c); if (pIndex !== -1) return pIndex;
-        const aIndex = a.indexOf(c); if (aIndex !== -1) return aIndex;
-        if (c >= '0' && c <= '9') return c;
-        return '';
-    }).join('');
-
-    if (normalizedString === '') { input.value = ''; return; }
-    try {
-        const formattedValue = BigInt(normalizedString).toLocaleString('en-US');
-        if(input.value !== formattedValue) { input.value = formattedValue; }
-    } catch (error) {
-        if(input.value !== normalizedString) { input.value = normalizedString; }
-    }
+    const normalizedString = value.split('').map(c => p[c] || a[c] || c).join('').replace(/[^0-9]/g, '');
+    if (normalizedString) { input.value = new Intl.NumberFormat('en-US').format(normalizedString); } else { input.value = ''; }
 }
 
 function handleEmployerFormSubmit(e) {
     e.preventDefault();
     const name = dom.employerNameInput.value.trim();
     if (!name) return;
-
     const employerId = dom.employerIdInput.value;
-
-    if (employerId) { // Edit mode
+    if (employerId) {
         const employer = state.employers.find(emp => emp.id === employerId);
-        if (employer) {
-            employer.name = name;
-            showToast('نام کارفرما با موفقیت بروزرسانی شد.');
-        }
-    } else { // Add mode
-        const newEmployer = { id: generateId(), name, items: [] };
+        if (employer) { employer.name = name; showToast('نام کارفرما با موفقیت بروزرسانی شد.'); }
+    } else {
+        const newEmployer = { id: generateId(), name, items: [], supervisionPercent: state.settings.supervisionPercent, supervisionBase: state.settings.supervisionBase };
         state.employers.push(newEmployer);
         state.activeEmployerId = newEmployer.id;
         showToast('کارفرما با موفقیت اضافه شد.');
     }
-
     closeEmployerModal();
     render();
 }
-
 
 function handleEmployerActions(e) {
     const link = e.target.closest('.employer-link');
     const deleteBtn = e.target.closest('[data-action="delete-employer"]');
     const editBtn = e.target.closest('[data-action="edit-employer"]');
-
     if (deleteBtn) {
         e.preventDefault(); e.stopPropagation();
         const employerId = deleteBtn.dataset.employerId;
         const employer = state.employers.find(emp => emp.id === employerId);
         openConfirmModal(`آیا از حذف کارفرمای "${employer.name}" و تمام آیتم‌های آن مطمئن هستید؟`, () => {
             state.employers = state.employers.filter(emp => emp.id !== employerId);
-            if (state.activeEmployerId === employerId) {
-                state.activeEmployerId = state.employers.length > 0 ? state.employers[0].id : null;
-            }
+            if (state.activeEmployerId === employerId) { state.activeEmployerId = state.employers.length > 0 ? state.employers[0].id : null; }
             render();
             showToast('کارفرما حذف شد.', 'destructive');
         });
     } else if (editBtn) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         const employerId = editBtn.dataset.employerId;
         const employer = state.employers.find(emp => emp.id === employerId);
-        if (employer) {
-            openEmployerModal(employer);
-        }
+        if (employer) openEmployerModal(employer);
     } else if (link) {
         e.preventDefault();
         state.activeEmployerId = link.dataset.id;
@@ -524,16 +570,13 @@ async function handleItemActions(e) {
     if (!actionElement) return;
     const itemRow = actionElement.closest('.item-row');
     const itemId = itemRow?.dataset.id;
-    const item = getActiveEmployer()?.items.find(i => i.id === itemId);
+    const employer = getActiveEmployer();
+    const item = employer?.items.find(i => i.id === itemId);
     if (!item) return;
-
     switch (actionElement.dataset.action) {
-        case 'edit-item':
-            handleEditItem(item);
-            break;
+        case 'edit-item': handleEditItem(item); break;
         case 'delete-item':
             openConfirmModal(`آیا از حذف آیتم "${item.name}" مطمئن هستید؟`, () => {
-                const employer = getActiveEmployer();
                 employer.items = employer.items.filter(i => i.id !== itemId);
                 render();
                 showToast('آیتم حذف شد.', 'destructive');
@@ -542,6 +585,13 @@ async function handleItemActions(e) {
         case 'toggle-parent': item.isParent = e.target.checked; saveState(); break;
         case 'upload-attachment': await handleFileUpload(e.target.files[0], item); break;
         case 'preview-attachment': previewAttachment(item.attachment); break;
+        case 'delete-attachment':
+            openConfirmModal(`آیا از حذف پیوست "${item.attachment.filename}" مطمئن هستید؟`, () => {
+                item.attachment = null;
+                render();
+                showToast('پیوست با موفقیت حذف شد.');
+            });
+            break;
     }
 }
 
@@ -556,108 +606,198 @@ async function handleFileUpload(file, item) {
     } catch (error) { console.error("File read error:", error); showToast("خطا در بارگذاری فایل.", 'destructive'); }
 }
 
-function handleSettingsChange(e) { const t = e.target; if (t.id === 'supervision-percent') { const p = parseFloat(t.value); if (!isNaN(p) && p >= 0) state.settings.supervisionPercent = p / 100; } else if (t.matches('.supervision-base-toggle')) { state.settings.supervisionBase = t.dataset.value; } render(); }
-function handleDeleteAllData() { openConfirmModal("این عمل تمام داده‌ها را پاک می‌کند. آیا مطمئن هستید؟", () => { state = { ...defaultState }; localforage.removeItem('invoiceManagerData').then(() => { initializeApp(); showToast('تمام داده‌ها پاک شد.', 'destructive'); }); }); }
+function handleSettingsChange(e) {
+    const activeEmployer = getActiveEmployer();
+    if (!activeEmployer) return;
+    const t = e.target;
+    if (t.id === 'supervision-percent') {
+        const p = parseFloat(t.value);
+        if (!isNaN(p) && p >= 0) activeEmployer.supervisionPercent = p / 100;
+    } else if (t.matches('.supervision-base-toggle')) {
+        activeEmployer.supervisionBase = t.dataset.value;
+    }
+    render();
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Payment Profile Management
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function openPaymentProfilesModal() {
+    dom.paymentProfilesModal.classList.remove('hidden');
+    dom.paymentProfilesModal.classList.add('flex');
+    renderPaymentProfilesList();
+    resetPaymentProfileForm();
+}
+
+function closePaymentProfilesModal() {
+    dom.paymentProfilesModal.classList.add('hidden');
+    dom.paymentProfilesModal.classList.remove('flex');
+    renderPaymentProfileSelector(); // Update dropdown on close
+}
+
+function renderPaymentProfilesList() {
+    const profiles = state.settings.paymentProfiles || [];
+    if (profiles.length === 0) {
+        dom.paymentProfilesListContainer.innerHTML = '<p class="text-center text-gray-500">هیچ پروفایلی یافت نشد.</p>';
+        return;
+    }
+    dom.paymentProfilesListContainer.innerHTML = profiles.map(p => `
+        <div class="flex items-center justify-between p-2 border-b hover:bg-gray-50">
+            <div>
+                <p class="font-semibold">${p.profileName}</p>
+                <p class="text-sm text-gray-600">${p.name} - ${p.card || p.iban}</p>
+            </div>
+            <div class="space-x-2 rtl:space-x-reverse">
+                <button data-id="${p.id}" class="edit-profile-btn p-2 text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                <button data-id="${p.id}" class="delete-profile-btn p-2 text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+
+    dom.paymentProfilesListContainer.querySelectorAll('.edit-profile-btn').forEach(btn => btn.addEventListener('click', handleEditPaymentProfile));
+    dom.paymentProfilesListContainer.querySelectorAll('.delete-profile-btn').forEach(btn => btn.addEventListener('click', handleDeletePaymentProfile));
+}
+
+function handlePaymentProfileFormSubmit(e) {
+    e.preventDefault();
+    const id = dom.paymentProfileIdInput.value;
+    const profileData = {
+        profileName: dom.profileNameInput.value.trim(),
+        name: dom.profileHolderNameInput.value.trim(),
+        iban: dom.profileIbanInput.value.trim(),
+        card: dom.profileCardInput.value.trim(),
+        phone: dom.profilePhoneInput.value.trim(),
+    };
+    if (!profileData.profileName || !profileData.name) {
+        showToast('نام پروفایل و نام صاحب حساب الزامی است.', 'destructive');
+        return;
+    }
+    if (!state.settings.paymentProfiles) state.settings.paymentProfiles = [];
+    if (id) {
+        const index = state.settings.paymentProfiles.findIndex(p => p.id === id);
+        if (index > -1) state.settings.paymentProfiles[index] = { ...state.settings.paymentProfiles[index], ...profileData };
+    } else {
+        const newProfile = { ...profileData, id: generateId() };
+        state.settings.paymentProfiles.push(newProfile);
+        if(!state.settings.selectedPaymentProfileId) state.settings.selectedPaymentProfileId = newProfile.id;
+    }
+    resetPaymentProfileForm();
+    renderPaymentProfilesList();
+    saveState();
+}
+
+function handleEditPaymentProfile(e) {
+    const id = e.currentTarget.dataset.id;
+    const profile = state.settings.paymentProfiles.find(p => p.id === id);
+    if (!profile) return;
+    dom.paymentFormTitle.textContent = "ویرایش پروفایل";
+    dom.paymentProfileIdInput.value = profile.id;
+    dom.profileNameInput.value = profile.profileName;
+    dom.profileHolderNameInput.value = profile.name;
+    dom.profileIbanInput.value = profile.iban;
+    dom.profileCardInput.value = profile.card;
+    dom.profilePhoneInput.value = profile.phone;
+    dom.paymentProfileForm.scrollIntoView({ behavior: 'smooth' });
+}
+
+function handleDeletePaymentProfile(e) {
+    const id = e.currentTarget.dataset.id;
+    openConfirmModal('آیا از حذف این پروفایل پرداخت مطمئن هستید؟', () => {
+        state.settings.paymentProfiles = state.settings.paymentProfiles.filter(p => p.id !== id);
+        if (state.settings.selectedPaymentProfileId === id) {
+            state.settings.selectedPaymentProfileId = state.settings.paymentProfiles.length > 0 ? state.settings.paymentProfiles[0].id : null;
+        }
+        renderPaymentProfilesList();
+        saveState();
+        showToast('پروفایل حذف شد.', 'destructive');
+    });
+}
+
+function resetPaymentProfileForm() {
+    dom.paymentProfileForm.reset();
+    dom.paymentProfileIdInput.value = '';
+    dom.paymentFormTitle.textContent = "افزودن پروفایل جدید";
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Core Logic & Utility Functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function handleDeleteAllData() { openConfirmModal("این عمل تمام داده‌ها را پاک می‌کند. آیا مطمئن هستید؟", () => { localforage.clear().then(() => { state = JSON.parse(JSON.stringify(defaultState)); initializeApp(); showToast('تمام داده‌ها پاک شد.', 'destructive'); }); }); }
 function handleExportExcel() { const e = getActiveEmployer(); if (e) exportToExcel(e); }
 function handleExportHTMLZip() { const e = getActiveEmployer(); if (e) exportToHTMLZip(e); }
-
-// Core Logic & Calculations
 const getActiveEmployer = () => state.employers.find(e => e.id === state.activeEmployerId);
-function calculateSummary(items) { const totalExpenses = items.filter(i => i.type === 'expense').reduce((s, i) => s + i.amount, 0); const totalReceived = items.filter(i => i.type === 'received').reduce((s, i) => s + i.amount, 0); const baseValue = state.settings.supervisionBase === 'received' ? totalReceived : totalExpenses; const supervisionFee = Math.round(baseValue * state.settings.supervisionPercent); const netBalance = totalReceived - totalExpenses - supervisionFee; return { totalExpenses, totalReceived, supervisionFee, netBalance }; }
+function calculateSummary(employer) {
+    const items = employer.items || [];
+    const totalExpenses = items.filter(i => i.type === 'expense').reduce((s, i) => s + i.amount, 0);
+    const totalReceived = items.filter(i => i.type === 'received').reduce((s, i) => s + i.amount, 0);
+    const supervisionPercent = employer.supervisionPercent ?? defaultState.settings.supervisionPercent;
+    const supervisionBase = employer.supervisionBase ?? defaultState.settings.supervisionBase;
+    const baseValue = supervisionBase === 'received' ? totalReceived : totalExpenses;
+    const supervisionFee = Math.round(baseValue * supervisionPercent);
+    const netBalance = totalReceived - totalExpenses - supervisionFee;
+    return { totalExpenses, totalReceived, supervisionFee, netBalance };
+}
 function normalizePersianNumber(str) {
     if (typeof str !== 'string' || !str) return NaN;
     const p2e = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9' };
     const a2e = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
     const sanitized = String(str).replace(/[^۰-۹٠-٩0-9]/g, '');
     const latin = sanitized.split('').map(char => p2e[char] || a2e[char] || char).join('');
-    if (latin === '') return NaN;
-    return parseFloat(latin);
+    return latin === '' ? NaN : parseFloat(latin);
 }
 function formatCurrency(num) { return new Intl.NumberFormat('fa-IR').format(num) + ' ریال'; }
 function previewAttachment(attachment) { const blob = base64ToBlob(attachment.dataUrl.split(',')[1], attachment.type); const url = URL.createObjectURL(blob); window.open(url, '_blank'); }
-
-// Modals, Toasts, and Utility Functions
 function openEmployerModal(employer = null) {
     dom.employerForm.reset();
-    if (employer) { // Edit mode
+    if (employer) {
         dom.employerModalTitle.textContent = 'ویرایش کارفرما';
         dom.employerNameInput.value = employer.name;
         dom.employerIdInput.value = employer.id;
-    } else { // Add mode
+    } else {
         dom.employerModalTitle.textContent = 'افزودن کارفرما';
-        dom.employerIdInput.value = ''; // Ensure ID is cleared
+        dom.employerIdInput.value = '';
     }
     dom.employerModal.classList.remove('hidden');
     dom.employerModal.classList.add('flex');
     dom.employerNameInput.focus();
 }
-
-function closeEmployerModal() {
-    dom.employerModal.classList.add('hidden');
-    dom.employerModal.classList.remove('flex');
-    dom.employerIdInput.value = ''; // Reset the hidden ID field
-}
-
+function closeEmployerModal() { dom.employerModal.classList.add('hidden'); dom.employerModal.classList.remove('flex'); dom.employerIdInput.value = ''; }
 function openConfirmModal(message, onConfirm) { dom.confirmModalText.textContent = message; confirmCallback = onConfirm; dom.confirmModal.classList.remove('hidden'); dom.confirmModal.classList.add('flex'); }
 function closeConfirmModal() { dom.confirmModal.classList.add('hidden'); dom.confirmModal.classList.remove('flex'); confirmCallback = null; }
-
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     const isDestructive = type === 'destructive';
     const icon = isDestructive ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-check-circle"></i>';
-    toast.className = `toast flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse rounded-xl shadow-lg transition-all duration-300 ${isDestructive ? 'bg-red-50 text-red-700 dark:bg-red-900/60 dark:text-red-200' : 'bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`;
-    toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-lg ${isDestructive ? 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200' : 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200'} rounded-lg">${icon}</div><div class="ms-3 text-sm font-normal">${message}</div>`;
+    toast.className = `toast flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse rounded-xl shadow-lg transition-all duration-300 ${isDestructive ? 'bg-red-50 text-red-700' : 'bg-white text-gray-500'}`;
+    toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-lg ${isDestructive ? 'text-red-500 bg-red-100' : 'text-green-500 bg-green-100'} rounded-lg">${icon}</div><div class="ms-3 text-sm font-normal">${message}</div>`;
     dom.toastContainer.appendChild(toast);
     setTimeout(() => { toast.classList.add('fade-out'); toast.addEventListener('animationend', () => toast.remove()); }, 3000);
 }
+const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const base64ToBlob = (base64, mimeType) => { const byteCharacters = atob(base64); const byteNumbers = new Array(byteCharacters.length); for (let i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); } const byteArray = new Uint8Array(byteNumbers); return new Blob([byteArray], { type: mimeType }); };
 
-// Export functions and utilities
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Export functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function exportToExcel(employer) {
-    const data = [];
-    data.push([`فاکتور ${employer.name}`]);
-    data.push([]);
-    data.push(['عنوان', '', '', '', '', '', 'مبلغ']);
-
+    const data = [[`فاکتور ${employer.name}`], [], ['عنوان', '', '', '', '', '', 'مبلغ']];
     const formatNumber = (num) => new Intl.NumberFormat('en-US').format(num);
-
-    employer.items.forEach(item => {
-        data.push([item.name, null, null, null, null, null, formatNumber(item.amount)]);
-    });
-    
-    // Summary Calculation
-    const summary = calculateSummary(employer.items);
-    const supervisionBaseText = state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد';
+    employer.items.forEach(item => data.push([item.name, null, null, null, null, null, formatNumber(item.amount)]));
+    const summary = calculateSummary(employer);
+    const supervisionBaseText = (employer.supervisionBase || 'received') === 'received' ? 'دریافتی' : 'خرج کرد';
     const isDebtor = summary.netBalance < 0;
     const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
     const balanceAmount = formatNumber(Math.abs(summary.netBalance));
-    
-    // Adding Summary to data array
-    data.push([]); // Spacer
-    data.push([null, null, null, null, null, 'جمع خرج کرد', formatNumber(summary.totalExpenses)]);
-    data.push([null, null, null, null, null, 'جمع دریافتی', formatNumber(summary.totalReceived)]);
-    data.push([null, null, null, null, null, `مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${supervisionBaseText})`, formatNumber(summary.supervisionFee)]);
-    data.push([]); // Spacer
-    data.push([null, null, null, null, null, balanceStatusText, balanceAmount]);
-
+    data.push([], [null, null, null, null, null, 'جمع خرج کرد', formatNumber(summary.totalExpenses)], [null, null, null, null, null, 'جمع دریافتی', formatNumber(summary.totalReceived)], [null, null, null, null, null, `مبلغ نظارت (${(employer.supervisionPercent || 0) * 100}% از ${supervisionBaseText})`, formatNumber(summary.supervisionFee)], [], [null, null, null, null, null, balanceStatusText, balanceAmount]);
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!RTL'] = true;
-
     if (!ws['!merges']) ws['!merges'] = [];
     ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
-
     ws['!cols'] = [ { wch: 50 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 20 } ];
-
-    const titleCell = ws['A1'];
-    if (titleCell) {
-        titleCell.s = { font: { sz: 16, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
-    }
-    
-    const headerCellA = ws['A3'];
-    const headerCellG = ws['G3'];
+    if(ws['A1']) ws['A1'].s = { font: { sz: 16, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
     const headerStyle = { font: { bold: true }, alignment: { horizontal: "center" } };
-    if(headerCellA) headerCellA.s = headerStyle;
-    if(headerCellG) headerCellG.s = headerStyle;
-
+    if(ws['A3']) ws['A3'].s = headerStyle;
+    if(ws['G3']) ws['G3'].s = headerStyle;
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "فاکتور");
     XLSX.writeFile(wb, `فاکتور-${employer.name}.xlsx`);
@@ -665,7 +805,7 @@ function exportToExcel(employer) {
 
 async function exportToHTMLZip(employer) {
     const parentItems = employer.items.filter(item => item.isParent);
-    const summary = calculateSummary(employer.items);
+    const summary = calculateSummary(employer);
     const zip = new JSZip();
     let attachmentsHtml = '';
     parentItems.forEach(item => {
@@ -680,8 +820,25 @@ async function exportToHTMLZip(employer) {
     const isDebtor = summary.netBalance < 0;
     const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
     const balanceAmountText = formatCurrency(Math.abs(summary.netBalance));
+    const supervisionBaseText = (employer.supervisionBase || 'received') === 'received' ? 'دریافتی' : 'خرج کرد';
 
-    const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد'}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>${balanceStatusText}:</b></td><td><b>${balanceAmountText}</b></td></tr></table><h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div></body></html>`;
+    const selectedProfileId = state.settings.selectedPaymentProfileId;
+    const selectedProfile = (state.settings.paymentProfiles || []).find(p => p.id === selectedProfileId);
+    
+    let paymentInfoHtml = '<!-- No payment profile selected -->';
+    if(selectedProfile) {
+        paymentInfoHtml = `<div class="tip-box">
+            <h3>راهنمای پرداخت</h3>
+            <p>مشتری گرامی جهت تسویه حساب لطفا مبلغ فاکتور را به یکی از روش های زیر پرداخت نمایید:</p>
+            ${selectedProfile.iban ? `<div class="copy-container"><strong>شماره شبا:&nbsp;</strong><code id="iban">${selectedProfile.iban}</code><button class="copy-btn" onclick="copyToClipboard('iban', this)">کپی</button></div>` : ''}
+            ${selectedProfile.card ? `<div class="copy-container"><strong>شماره کارت:&nbsp;</strong><code id="card">${selectedProfile.card}</code><button class="copy-btn" onclick="copyToClipboard('card', this)">کپی</button></div>` : ''}
+            <p>به نام: <strong>${selectedProfile.name}</strong></p>
+            <hr style="border: none; border-top: 1px solid #91d5ff; margin: 15px 0;">
+            <p>لطفا پس از واریز، رسید پرداختی را به شماره <strong>${selectedProfile.phone}</strong> ارسال نمایید.</p>
+        </div>`;
+    }
+
+    const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>body { font-family: 'Vazirmatn', sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; } .tip-box { background-color: #e6f7ff; border: 1px solid #91d5ff; color: #0050b3; padding: 20px; border-radius: 8px; margin-top: 30px; margin-bottom: 30px; } .tip-box h3 { margin-top: 0; color: #003a8c; } .tip-box p { margin: 10px 0; } .copy-btn { background-color: #007bff; color: white; border: none; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-right: 8px; } .copy-btn:hover { background-color: #0056b3; } .copy-container { margin: 10px 0; display: flex; align-items: center; } .copy-container code { background-color: #d1ecff; padding: 3px 6px; border-radius: 4px; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${(employer.supervisionPercent || 0) * 100}% از ${supervisionBaseText}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>${balanceStatusText}:</b></td><td><b>${balanceAmountText}</b></td></tr></table>${paymentInfoHtml}<h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div><script>function copyToClipboard(elementId, button) { const textToCopy = document.getElementById(elementId).innerText; const textArea = document.createElement('textarea'); textArea.value = textToCopy; textArea.style.position = 'fixed'; textArea.style.top = '-9999px'; textArea.style.left = '-9999px'; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); const originalText = button.innerText; button.innerText = 'کپی شد!'; setTimeout(() => { button.innerText = originalText; }, 1500); }<\/script></body></html>`;
     zip.file(`گزارش-${employer.name}.html`, htmlContent);
     const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
@@ -691,9 +848,6 @@ async function exportToHTMLZip(employer) {
     link.click();
     document.body.removeChild(link);
 }
-const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-const base64ToBlob = (base64, mimeType) => { const byteCharacters = atob(base64); const byteNumbers = new Array(byteCharacters.length); for (let i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); } const byteArray = new Uint8Array(byteNumbers); return new Blob([byteArray], { type: mimeType }); };
-
 </script>
 </body>
 </html>
