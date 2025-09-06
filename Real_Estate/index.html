@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت فاکتور مالک</title>
+    <title>مدیریت فاکتور </title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <!-- Libraries for Excel, Zipping, and Local Storage -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -92,6 +95,15 @@
             from { opacity: 1; transform: translateY(0); }
             to { opacity: 0; transform: translateY(20px); }
         }
+
+        /* Hide scrollbar but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-black">
@@ -100,9 +112,7 @@
         <aside class="w-72 flex-shrink-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 flex flex-col">
             <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
                 <h1 class="text-lg font-bold text-gray-800 dark:text-white">کارفرماها</h1>
-                <button id="add-employer-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="افزودن کارفرما جدید">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                </button>
+                <button id="add-employer-btn" class="p-2 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="افزودن کارفرما جدید"><i class="fas fa-plus"></i></button>
             </div>
             <nav id="employers-list" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
         </aside>
@@ -119,19 +129,37 @@
 
             <div class="flex-1 flex overflow-hidden">
                 <!-- Items List -->
-                <section class="flex-1 flex flex-col overflow-y-auto p-6">
+                <section class="flex-1 flex flex-col p-6">
                     <div class="mb-6 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
-                        <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <form id="item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                            <input type="hidden" id="edit-item-id">
                             <div class="md:col-span-2"><label for="item-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نام آیتم</label><input type="text" id="item-name" placeholder="مثال: دستمزد نصب" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
                             <div><label for="item-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مبلغ (ریال)</label><input type="text" id="item-amount" placeholder="مثال: ۱,۲۰۰,۰۰۰" required class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
                             <div><label for="item-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع</label><select id="item-type" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option value="expense">هزینه</option><option value="received">دریافتی</option></select></div>
-                            <button type="submit" class="w-full h-10 px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">افزودن آیتم</button>
+                            <div class="flex items-center gap-2">
+                                <button type="submit" id="item-submit-btn" class="w-full h-10 px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-black dark:bg-white dark:hover:bg-gray-200">افزودن آیتم</button>
+                                <button type="button" id="cancel-edit-btn" class="hidden h-10 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">انصراف</button>
+                            </div>
                         </form>
                     </div>
 
-                    <div class="flex-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800"><thead class="bg-gray-50 dark:bg-gray-800/50"><tr><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نام آیتم</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">مبلغ</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نوع</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">پیوست</th><th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">گزارش کارفرما</th><th scope="col" class="relative px-6 py-3"><span class="sr-only">عملیات</span></th></tr></thead><tbody id="items-list" class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"></tbody></table></div>
-                        <div id="empty-state" class="hidden text-center py-24 px-6"><svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">برای شروع یک آیتم جدید اضافه کنید.</p></div>
+                    <div class="flex-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
+                        <div class="overflow-x-auto overflow-y-auto flex-1 hide-scrollbar">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                                <thead class="bg-gray-50/80 dark:bg-gray-800/50 sticky top-0 backdrop-blur-sm">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نام آیتم</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">مبلغ</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">نوع</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">پیوست</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">گزارش کارفرما</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-list" class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"></tbody>
+                            </table>
+                        </div>
+                        <div id="empty-state" class="hidden text-center py-24 px-6"><h3 class="mt-4 text-sm font-semibold text-gray-900 dark:text-white">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">برای شروع یک آیتم جدید اضافه کنید.</p></div>
                     </div>
                 </section>
 
@@ -156,26 +184,23 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-3"></div>
 
 <script type="module">
-// ... existing JS code from previous turn, with the following modifications ...
-// I will apply the changes directly into the script block.
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // App Initialization & DOM Elements
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 const dom = {
-    // ... same as before
     app: document.getElementById('app'),
     employersList: document.getElementById('employers-list'),
     addEmployerBtn: document.getElementById('add-employer-btn'),
     activeEmployerHeader: document.getElementById('active-employer-header'),
     itemsList: document.getElementById('items-list'),
     emptyState: document.getElementById('empty-state'),
-    addItemForm: document.getElementById('add-item-form'),
+    itemForm: document.getElementById('item-form'),
     summaryCard: document.getElementById('summary-card'),
     exportExcelBtn: document.getElementById('export-excel-btn'),
     exportHtmlBtn: document.getElementById('export-html-btn'),
     deleteAllDataBtn: document.getElementById('delete-all-data-btn'),
+
     // Modals & Toasts
     employerModal: document.getElementById('employer-modal'),
     employerModalTitle: document.getElementById('employer-modal-title'),
@@ -188,6 +213,14 @@ const dom = {
     confirmCancelBtn: document.getElementById('confirm-cancel'),
     confirmAcceptBtn: document.getElementById('confirm-accept'),
     toastContainer: document.getElementById('toast-container'),
+
+    // Item Form elements
+    editItemIdInput: document.getElementById('edit-item-id'),
+    itemNameInput: document.getElementById('item-name'),
+    itemAmountInput: document.getElementById('item-amount'),
+    itemTypeInput: document.getElementById('item-type'),
+    itemSubmitBtn: document.getElementById('item-submit-btn'),
+    cancelEditBtn: document.getElementById('cancel-edit-btn'),
 };
 
 let state = {};
@@ -204,7 +237,7 @@ function initializeApp() {
         showWelcomeState();
     } else {
         if (!state.activeEmployerId || !state.employers.find(e => e.id === state.activeEmployerId)) {
-            state.activeEmployerId = state.employers[0].id;
+            state.activeEmployerId = state.employers.length > 0 ? state.employers[0].id : null;
         }
     }
     render();
@@ -270,8 +303,8 @@ function renderEmployersList() {
     dom.employersList.innerHTML = state.employers.map(employer => `
         <a href="#" data-id="${employer.id}" class="employer-link group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${state.activeEmployerId === employer.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}">
             <span>${employer.name}</span>
-             <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+             <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity" title="حذف کارفرما">
+                <i class="fas fa-trash"></i>
             </button>
         </a>
     `).join('');
@@ -284,10 +317,13 @@ function renderActiveEmployerHeader(employer) {
 function renderItemsList(items) {
     if (items.length === 0) {
         dom.itemsList.innerHTML = '';
-        dom.emptyState.classList.remove('hidden');
+        dom.emptyState.classList.add('hidden');
+        dom.emptyState.classList.remove('flex-1');
         return;
     }
     dom.emptyState.classList.add('hidden');
+    dom.emptyState.classList.remove('flex-1');
+    
     dom.itemsList.innerHTML = items.map(item => `
         <tr class="item-row hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${item.id}">
             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900 dark:text-white">${item.name}</div></td>
@@ -295,7 +331,10 @@ function renderItemsList(items) {
             <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${item.attachment ? `<button data-action="preview-attachment" title="${item.attachment.filename}" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-800">${item.attachment.filename.substring(0, 15)}...</button>` : `<label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">بارگذاری<input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf"></label>`}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${item.isParent ? 'checked' : ''} class="sr-only peer" data-action="toggle-parent"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div></label></td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-left"><button data-action="delete-item" class="p-2 text-gray-400 hover:text-red-500 rounded-md"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                <button data-action="edit-item" class="p-2 text-blue-600 hover:text-blue-900 rounded-md" title="ویرایش"><i class="fas fa-edit"></i></button>
+                <button data-action="delete-item" class="p-2 text-red-600 hover:text-red-900 rounded-md" title="حذف"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>`).join('');
 }
 
@@ -305,7 +344,7 @@ function renderSummary(employer) {
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Event Handlers
+// Event Handlers & Actions
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function setupEventListeners() {
@@ -313,19 +352,104 @@ function setupEventListeners() {
     dom.employerForm.addEventListener('submit', handleEmployerFormSubmit);
     dom.cancelEmployerModalBtn.addEventListener('click', () => closeEmployerModal());
     dom.employersList.addEventListener('click', handleEmployerActions);
-    dom.addItemForm.addEventListener('submit', handleAddItem);
+    
+    dom.itemForm.addEventListener('submit', handleItemFormSubmit);
+    dom.itemAmountInput.addEventListener('input', handleAmountInputFormatting);
+    dom.cancelEditBtn.addEventListener('click', resetItemForm);
+    
     dom.itemsList.addEventListener('click', handleItemActions);
     dom.itemsList.addEventListener('change', handleItemActions);
+    
     dom.summaryCard.addEventListener('change', handleSettingsChange);
     dom.summaryCard.addEventListener('click', handleSettingsChange);
+    
     dom.exportExcelBtn.addEventListener('click', handleExportExcel);
     dom.exportHtmlBtn.addEventListener('click', handleExportHTMLZip);
     dom.deleteAllDataBtn.addEventListener('click', handleDeleteAllData);
+    
     dom.confirmCancelBtn.addEventListener('click', closeConfirmModal);
     dom.confirmAcceptBtn.addEventListener('click', () => {
         if (confirmCallback) confirmCallback();
         closeConfirmModal();
     });
+}
+
+function handleItemFormSubmit(e) {
+    e.preventDefault();
+    const name = dom.itemNameInput.value.trim();
+    const amount = normalizePersianNumber(dom.itemAmountInput.value);
+    const type = dom.itemTypeInput.value;
+    const itemId = dom.editItemIdInput.value;
+
+    const activeEmployer = getActiveEmployer();
+    if (!activeEmployer) {
+        showToast('لطفا ابتدا یک کارفرما ایجاد یا انتخاب کنید.', 'destructive');
+        return;
+    }
+
+    if (!name || isNaN(amount) || amount <= 0) {
+        showToast('لطفا نام و مبلغ معتبر وارد کنید.', 'destructive');
+        return;
+    }
+    
+    if (itemId) { // Editing existing item
+        const item = activeEmployer.items.find(i => i.id === itemId);
+        if (item) {
+            item.name = name;
+            item.amount = amount;
+            item.type = type;
+        }
+        showToast('آیتم با موفقیت بروزرسانی شد.');
+    } else { // Adding new item
+        activeEmployer.items.push({
+            id: generateId(), name, amount, type,
+            isParent: false, attachment: null, createdAt: new Date().toISOString()
+        });
+        showToast('آیتم جدید اضافه شد.');
+    }
+    
+    resetItemForm();
+    render();
+}
+
+function handleEditItem(item) {
+    dom.editItemIdInput.value = item.id;
+    dom.itemNameInput.value = item.name;
+    dom.itemAmountInput.value = new Intl.NumberFormat('en-US').format(item.amount);
+    dom.itemTypeInput.value = item.type;
+    
+    dom.itemSubmitBtn.textContent = 'بروزرسانی آیتم';
+    dom.cancelEditBtn.classList.remove('hidden');
+    dom.itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    dom.itemNameInput.focus();
+}
+
+function resetItemForm() {
+    dom.itemForm.reset();
+    dom.editItemIdInput.value = '';
+    dom.itemSubmitBtn.textContent = 'افزودن آیتم';
+    dom.cancelEditBtn.classList.add('hidden');
+}
+
+
+function handleAmountInputFormatting(e) {
+    const input = e.target;
+    let value = input.value;
+    const p = '۰۱۲۳۴۵۶۷۸۹'; const a = '٠١٢٣٤٥٦٧٨٩';
+    const normalizedString = value.replace(/,/g, '').split('').map(c => {
+        const pIndex = p.indexOf(c); if (pIndex !== -1) return pIndex;
+        const aIndex = a.indexOf(c); if (aIndex !== -1) return aIndex;
+        if (c >= '0' && c <= '9') return c;
+        return '';
+    }).join('');
+
+    if (normalizedString === '') { input.value = ''; return; }
+    try {
+        const formattedValue = BigInt(normalizedString).toLocaleString('en-US');
+        if(input.value !== formattedValue) { input.value = formattedValue; }
+    } catch (error) {
+        if(input.value !== normalizedString) { input.value = normalizedString; }
+    }
 }
 
 function handleEmployerFormSubmit(e) { e.preventDefault(); const name = dom.employerNameInput.value.trim(); if (!name) return; const newEmployer = { id: generateId(), name, items: [] }; state.employers.push(newEmployer); state.activeEmployerId = newEmployer.id; closeEmployerModal(); render(); showToast('کارفرما با موفقیت اضافه شد.'); }
@@ -334,8 +458,7 @@ function handleEmployerActions(e) {
     const link = e.target.closest('.employer-link');
     const deleteBtn = e.target.closest('[data-action="delete-employer"]');
     if (deleteBtn) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         const employerId = deleteBtn.dataset.employerId;
         const employer = state.employers.find(emp => emp.id === employerId);
         openConfirmModal(`آیا از حذف کارفرمای "${employer.name}" و تمام آیتم‌های آن مطمئن هستید؟`, () => {
@@ -353,8 +476,6 @@ function handleEmployerActions(e) {
     }
 }
 
-function handleAddItem(e) { e.preventDefault(); const name = dom.addItemForm.querySelector('#item-name').value.trim(); const amount = normalizePersianNumber(dom.addItemForm.querySelector('#item-amount').value); const type = dom.addItemForm.querySelector('#item-type').value; if (!name || isNaN(amount) || amount <= 0) { showToast('لطفا نام و مبلغ معتبر وارد کنید.', 'destructive'); return; } const activeEmployer = getActiveEmployer(); if (!activeEmployer) return; activeEmployer.items.push({ id: generateId(), name, amount, type, isParent: false, attachment: null, createdAt: new Date().toISOString() }); dom.addItemForm.reset(); dom.addItemForm.querySelector('#item-name').focus(); render(); showToast('آیتم جدید اضافه شد.'); }
-
 async function handleItemActions(e) {
     const actionElement = e.target.closest('[data-action]');
     if (!actionElement) return;
@@ -362,7 +483,11 @@ async function handleItemActions(e) {
     const itemId = itemRow?.dataset.id;
     const item = getActiveEmployer()?.items.find(i => i.id === itemId);
     if (!item) return;
+
     switch (actionElement.dataset.action) {
+        case 'edit-item':
+            handleEditItem(item);
+            break;
         case 'delete-item':
             openConfirmModal(`آیا از حذف آیتم "${item.name}" مطمئن هستید؟`, () => {
                 const employer = getActiveEmployer();
@@ -389,54 +514,65 @@ async function handleFileUpload(file, item) {
 }
 
 function handleSettingsChange(e) { const t = e.target; if (t.id === 'supervision-percent') { const p = parseFloat(t.value); if (!isNaN(p) && p >= 0) state.settings.supervisionPercent = p / 100; } else if (t.matches('.supervision-base-toggle')) { state.settings.supervisionBase = t.dataset.value; } render(); }
-
 function handleDeleteAllData() { openConfirmModal("این عمل تمام داده‌ها را پاک می‌کند. آیا مطمئن هستید؟", () => { state = { ...defaultState }; localforage.removeItem('invoiceManagerData').then(() => { initializeApp(); showToast('تمام داده‌ها پاک شد.', 'destructive'); }); }); }
-
 function handleExportExcel() { const e = getActiveEmployer(); if (e) exportToExcel(e); }
 function handleExportHTMLZip() { const e = getActiveEmployer(); if (e) exportToHTMLZip(e); }
 
-// Core Logic & Calculations, Export Functions, etc. (mostly unchanged from previous version)
+// Core Logic & Calculations
 const getActiveEmployer = () => state.employers.find(e => e.id === state.activeEmployerId);
 function calculateSummary(items) { const totalExpenses = items.filter(i => i.type === 'expense').reduce((s, i) => s + i.amount, 0); const totalReceived = items.filter(i => i.type === 'received').reduce((s, i) => s + i.amount, 0); const baseValue = state.settings.supervisionBase === 'received' ? totalReceived : totalExpenses; const supervisionFee = Math.round(baseValue * state.settings.supervisionPercent); const netBalance = totalReceived - totalExpenses - supervisionFee; return { totalExpenses, totalReceived, supervisionFee, netBalance }; }
-function normalizePersianNumber(str) { if (!str) return NaN; const p = '۰۱۲۳۴۵۶۷۸۹', a = '٠١٢٣٤٥٦٧٨٩'; return parseFloat(String(str).replace(/[, ریال\s]/g, '').split('').map(c => p.indexOf(c) !== -1 ? p.indexOf(c) : (a.indexOf(c) !== -1 ? a.indexOf(c) : c)).join('')); }
+function normalizePersianNumber(str) {
+    if (typeof str !== 'string' || !str) return NaN;
+    const p2e = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9' };
+    const a2e = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+    const sanitized = String(str).replace(/[^۰-۹٠-٩0-9]/g, '');
+    const latin = sanitized.split('').map(char => p2e[char] || a2e[char] || char).join('');
+    if (latin === '') return NaN;
+    return parseFloat(latin);
+}
 function formatCurrency(num) { return new Intl.NumberFormat('fa-IR').format(num) + ' ریال'; }
 function previewAttachment(attachment) { const blob = base64ToBlob(attachment.dataUrl.split(',')[1], attachment.type); const url = URL.createObjectURL(blob); window.open(url, '_blank'); }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// New Modal, Toast, and Utility Functions
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Modals, Toasts, and Utility Functions
 function openEmployerModal() { dom.employerForm.reset(); dom.employerModalTitle.textContent = 'افزودن کارفرما'; dom.employerModal.classList.remove('hidden'); dom.employerModal.classList.add('flex'); }
 function closeEmployerModal() { dom.employerModal.classList.add('hidden'); dom.employerModal.classList.remove('flex'); }
-
 function openConfirmModal(message, onConfirm) { dom.confirmModalText.textContent = message; confirmCallback = onConfirm; dom.confirmModal.classList.remove('hidden'); dom.confirmModal.classList.add('flex'); }
 function closeConfirmModal() { dom.confirmModal.classList.add('hidden'); dom.confirmModal.classList.remove('flex'); confirmCallback = null; }
 
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     const isDestructive = type === 'destructive';
+    const icon = isDestructive ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-check-circle"></i>';
     toast.className = `toast flex items-center w-full max-w-xs p-4 space-x-4 rtl:space-x-reverse rounded-xl shadow-lg transition-all duration-300 ${isDestructive ? 'bg-red-50 text-red-700 dark:bg-red-900/60 dark:text-red-200' : 'bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`;
-    toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${isDestructive ? 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200' : 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200'} rounded-lg"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">${isDestructive ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />' : '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />'}</svg></div><div class="ms-3 text-sm font-normal">${message}</div>`;
+    toast.innerHTML = `<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-lg ${isDestructive ? 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200' : 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200'} rounded-lg">${icon}</div><div class="ms-3 text-sm font-normal">${message}</div>`;
     dom.toastContainer.appendChild(toast);
     setTimeout(() => { toast.classList.add('fade-out'); toast.addEventListener('animationend', () => toast.remove()); }, 3000);
 }
 
-// Export functions and utilities (unchanged)
+// Export functions and utilities
 function exportToExcel(employer) {
     const data = [];
     data.push([`فاکتور ${employer.name}`]);
     data.push([]);
     data.push(['عنوان', '', '', '', '', '', 'مبلغ']);
+
+    const formatNumber = (num) => new Intl.NumberFormat('en-US').format(num);
+
     employer.items.forEach(item => {
-        data.push([
-            item.name,
-            null,
-            null,
-            null,
-            null,
-            null,
-            new Intl.NumberFormat('en-US').format(item.amount).replace(/,/g, '/')
-        ]);
+        data.push([item.name, null, null, null, null, null, formatNumber(item.amount)]);
     });
+    
+    // Summary Calculation
+    const summary = calculateSummary(employer.items);
+    const supervisionBaseText = state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد';
+
+    // Adding Summary to data array
+    data.push([]); // Spacer
+    data.push([null, null, null, null, null, 'جمع خرج کرد', formatNumber(summary.totalExpenses)]);
+    data.push([null, null, null, null, null, 'جمع دریافتی', formatNumber(summary.totalReceived)]);
+    data.push([null, null, null, null, null, `مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${supervisionBaseText})`, formatNumber(summary.supervisionFee)]);
+    data.push([]); // Spacer
+    data.push([null, null, null, null, null, 'مانده نهایی', formatNumber(summary.netBalance)]);
 
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!RTL'] = true;
@@ -444,30 +580,16 @@ function exportToExcel(employer) {
     if (!ws['!merges']) ws['!merges'] = [];
     ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
 
-    ws['!cols'] = [
-        { wch: 50 },
-        { wch: 8 },
-        { wch: 8 },
-        { wch: 8 },
-        { wch: 8 },
-        { wch: 8 },
-        { wch: 20 }
-    ];
+    ws['!cols'] = [ { wch: 50 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 20 } ];
 
     const titleCell = ws['A1'];
     if (titleCell) {
-        titleCell.s = {
-            font: { sz: 16, bold: true },
-            alignment: { horizontal: "center", vertical: "center" }
-        };
+        titleCell.s = { font: { sz: 16, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
     }
     
     const headerCellA = ws['A3'];
     const headerCellG = ws['G3'];
-    const headerStyle = {
-        font: { bold: true },
-        alignment: { horizontal: "center" }
-    };
+    const headerStyle = { font: { bold: true }, alignment: { horizontal: "center" } };
     if(headerCellA) headerCellA.s = headerStyle;
     if(headerCellG) headerCellG.s = headerStyle;
 
@@ -481,7 +603,6 @@ async function exportToHTMLZip(employer) {
     const summary = calculateSummary(employer.items);
     const zip = new JSZip();
     let attachmentsHtml = '';
-
     parentItems.forEach(item => {
         let attachmentCellHtml = `<td style="padding: 12px; text-align: center;">-</td>`;
         if (item.attachment) {
@@ -491,12 +612,9 @@ async function exportToHTMLZip(employer) {
         }
         attachmentsHtml += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px;">${item.name}</td><td style="padding: 12px; text-align: left;">${formatCurrency(item.amount)}</td>${attachmentCellHtml}</tr>`;
     });
-
     const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد'}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>مانده نهایی:</b></td><td><b>${formatCurrency(summary.netBalance)}</b></td></tr></table><h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div></body></html>`;
     zip.file(`گزارش-${employer.name}.html`, htmlContent);
-    const content = await zip.generateAsync({
-        type: "blob"
-    });
+    const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(content);
     link.download = `گزارش-کامل-${employer.name}.zip`;
