@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت فاکتور </title>
+    <title>مدیریت فاکتور مالک</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -303,9 +303,14 @@ function renderEmployersList() {
     dom.employersList.innerHTML = state.employers.map(employer => `
         <a href="#" data-id="${employer.id}" class="employer-link group flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${state.activeEmployerId === employer.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}">
             <span>${employer.name}</span>
-             <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity" title="حذف کارفرما">
-                <i class="fas fa-trash"></i>
-            </button>
+            <span class="flex items-center gap-2">
+                <button data-action="edit-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-opacity" title="ویرایش کارفرما">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button data-action="delete-employer" data-employer-id="${employer.id}" class="p-1 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity" title="حذف کارفرما">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </span>
         </a>
     `).join('');
 }
@@ -340,7 +345,12 @@ function renderItemsList(items) {
 
 function renderSummary(employer) {
     const summary = calculateSummary(employer.items);
-    dom.summaryCard.innerHTML = `<div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع خرج کرد</span><span class="font-semibold text-red-600">${formatCurrency(summary.totalExpenses)}</span></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع دریافتی</span><span class="font-semibold text-green-600">${formatCurrency(summary.totalReceived)}</span></div><div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3"><div class="flex justify-between items-center text-sm"><label for="supervision-percent" class="text-gray-500 dark:text-gray-400">درصد نظارت</label><div class="flex items-center"><input type="text" inputmode="decimal" id="supervision-percent" value="${state.settings.supervisionPercent * 100}" class="w-16 text-left bg-gray-100 dark:bg-gray-700 dark:text-gray-200 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500" /><span class="mr-1">%</span></div></div><div class="text-sm"><label class="text-gray-500 dark:text-gray-400 block mb-2">مبنای نظارت</label><div class="flex gap-2"><button data-value="received" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'received' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">دریافتی</button><button data-value="expenses" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'expenses' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">خرج کرد</button></div></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">مبلغ نظارت</span><span class="font-semibold">${formatCurrency(summary.supervisionFee)}</span></div></div><div class="pt-4 mt-4 border-t-2 border-gray-300 dark:border-gray-600 flex justify-between items-center text-lg"><span class="font-bold">مانده نهایی</span><span class="font-bold text-xl ${summary.netBalance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-500'}">${formatCurrency(summary.netBalance)}</span></div>`;
+    const isDebtor = summary.netBalance < 0;
+    const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
+    const balanceAmountText = formatCurrency(Math.abs(summary.netBalance));
+    const balanceColorClass = isDebtor ? 'text-orange-500' : 'text-blue-600 dark:text-blue-400';
+
+    dom.summaryCard.innerHTML = `<div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع خرج کرد</span><span class="font-semibold text-red-600">${formatCurrency(summary.totalExpenses)}</span></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">جمع دریافتی</span><span class="font-semibold text-green-600">${formatCurrency(summary.totalReceived)}</span></div><div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3"><div class="flex justify-between items-center text-sm"><label for="supervision-percent" class="text-gray-500 dark:text-gray-400">درصد نظارت</label><div class="flex items-center"><input type="text" inputmode="decimal" id="supervision-percent" value="${state.settings.supervisionPercent * 100}" class="w-16 text-left bg-gray-100 dark:bg-gray-700 dark:text-gray-200 border-none rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500" /><span class="mr-1">%</span></div></div><div class="text-sm"><label class="text-gray-500 dark:text-gray-400 block mb-2">مبنای نظارت</label><div class="flex gap-2"><button data-value="received" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'received' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">دریافتی</button><button data-value="expenses" class="supervision-base-toggle flex-1 py-2 text-xs rounded-md border ${state.settings.supervisionBase === 'expenses' ? 'bg-gray-200 border-gray-300 text-black dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200' : 'bg-white border-gray-300 text-black hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700'}">خرج کرد</button></div></div><div class="flex justify-between items-center text-sm"><span class="text-gray-500 dark:text-gray-400">مبلغ نظارت</span><span class="font-semibold">${formatCurrency(summary.supervisionFee)}</span></div></div><div class="pt-4 mt-4 border-t-2 border-gray-300 dark:border-gray-600 flex justify-between items-center text-lg"><span class="font-bold">${balanceStatusText}</span><span class="font-bold text-xl ${balanceColorClass}">${balanceAmountText}</span></div>`;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -452,11 +462,36 @@ function handleAmountInputFormatting(e) {
     }
 }
 
-function handleEmployerFormSubmit(e) { e.preventDefault(); const name = dom.employerNameInput.value.trim(); if (!name) return; const newEmployer = { id: generateId(), name, items: [] }; state.employers.push(newEmployer); state.activeEmployerId = newEmployer.id; closeEmployerModal(); render(); showToast('کارفرما با موفقیت اضافه شد.'); }
+function handleEmployerFormSubmit(e) {
+    e.preventDefault();
+    const name = dom.employerNameInput.value.trim();
+    if (!name) return;
+
+    const employerId = dom.employerIdInput.value;
+
+    if (employerId) { // Edit mode
+        const employer = state.employers.find(emp => emp.id === employerId);
+        if (employer) {
+            employer.name = name;
+            showToast('نام کارفرما با موفقیت بروزرسانی شد.');
+        }
+    } else { // Add mode
+        const newEmployer = { id: generateId(), name, items: [] };
+        state.employers.push(newEmployer);
+        state.activeEmployerId = newEmployer.id;
+        showToast('کارفرما با موفقیت اضافه شد.');
+    }
+
+    closeEmployerModal();
+    render();
+}
+
 
 function handleEmployerActions(e) {
     const link = e.target.closest('.employer-link');
     const deleteBtn = e.target.closest('[data-action="delete-employer"]');
+    const editBtn = e.target.closest('[data-action="edit-employer"]');
+
     if (deleteBtn) {
         e.preventDefault(); e.stopPropagation();
         const employerId = deleteBtn.dataset.employerId;
@@ -469,6 +504,14 @@ function handleEmployerActions(e) {
             render();
             showToast('کارفرما حذف شد.', 'destructive');
         });
+    } else if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const employerId = editBtn.dataset.employerId;
+        const employer = state.employers.find(emp => emp.id === employerId);
+        if (employer) {
+            openEmployerModal(employer);
+        }
     } else if (link) {
         e.preventDefault();
         state.activeEmployerId = link.dataset.id;
@@ -534,8 +577,27 @@ function formatCurrency(num) { return new Intl.NumberFormat('fa-IR').format(num)
 function previewAttachment(attachment) { const blob = base64ToBlob(attachment.dataUrl.split(',')[1], attachment.type); const url = URL.createObjectURL(blob); window.open(url, '_blank'); }
 
 // Modals, Toasts, and Utility Functions
-function openEmployerModal() { dom.employerForm.reset(); dom.employerModalTitle.textContent = 'افزودن کارفرما'; dom.employerModal.classList.remove('hidden'); dom.employerModal.classList.add('flex'); }
-function closeEmployerModal() { dom.employerModal.classList.add('hidden'); dom.employerModal.classList.remove('flex'); }
+function openEmployerModal(employer = null) {
+    dom.employerForm.reset();
+    if (employer) { // Edit mode
+        dom.employerModalTitle.textContent = 'ویرایش کارفرما';
+        dom.employerNameInput.value = employer.name;
+        dom.employerIdInput.value = employer.id;
+    } else { // Add mode
+        dom.employerModalTitle.textContent = 'افزودن کارفرما';
+        dom.employerIdInput.value = ''; // Ensure ID is cleared
+    }
+    dom.employerModal.classList.remove('hidden');
+    dom.employerModal.classList.add('flex');
+    dom.employerNameInput.focus();
+}
+
+function closeEmployerModal() {
+    dom.employerModal.classList.add('hidden');
+    dom.employerModal.classList.remove('flex');
+    dom.employerIdInput.value = ''; // Reset the hidden ID field
+}
+
 function openConfirmModal(message, onConfirm) { dom.confirmModalText.textContent = message; confirmCallback = onConfirm; dom.confirmModal.classList.remove('hidden'); dom.confirmModal.classList.add('flex'); }
 function closeConfirmModal() { dom.confirmModal.classList.add('hidden'); dom.confirmModal.classList.remove('flex'); confirmCallback = null; }
 
@@ -565,14 +627,17 @@ function exportToExcel(employer) {
     // Summary Calculation
     const summary = calculateSummary(employer.items);
     const supervisionBaseText = state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد';
-
+    const isDebtor = summary.netBalance < 0;
+    const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
+    const balanceAmount = formatNumber(Math.abs(summary.netBalance));
+    
     // Adding Summary to data array
     data.push([]); // Spacer
     data.push([null, null, null, null, null, 'جمع خرج کرد', formatNumber(summary.totalExpenses)]);
     data.push([null, null, null, null, null, 'جمع دریافتی', formatNumber(summary.totalReceived)]);
     data.push([null, null, null, null, null, `مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${supervisionBaseText})`, formatNumber(summary.supervisionFee)]);
     data.push([]); // Spacer
-    data.push([null, null, null, null, null, 'مانده نهایی', formatNumber(summary.netBalance)]);
+    data.push([null, null, null, null, null, balanceStatusText, balanceAmount]);
 
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!RTL'] = true;
@@ -612,7 +677,11 @@ async function exportToHTMLZip(employer) {
         }
         attachmentsHtml += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px;">${item.name}</td><td style="padding: 12px; text-align: left;">${formatCurrency(item.amount)}</td>${attachmentCellHtml}</tr>`;
     });
-    const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد'}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>مانده نهایی:</b></td><td><b>${formatCurrency(summary.netBalance)}</b></td></tr></table><h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div></body></html>`;
+    const isDebtor = summary.netBalance < 0;
+    const balanceStatusText = isDebtor ? 'بدهکار' : 'بستانکار';
+    const balanceAmountText = formatCurrency(Math.abs(summary.netBalance));
+
+    const htmlContent = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>گزارش برای ${employer.name}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; background-color: #f7f7f7; color: #333; } .container { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 40px; } h1, h2 { color: #111; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { text-align: right; padding: 12px; } .summary-table td:last-child { font-weight: bold; text-align: left; }</style></head><body><div class="container"><h1>گزارش مالی برای ${employer.name}</h1><p>تاریخ گزارش: ${new Date().toLocaleDateString('fa-IR')}</p><h2>خلاصه حساب</h2><table class="summary-table"><tr><td>جمع خرج کرد:</td><td>${formatCurrency(summary.totalExpenses)}</td></tr><tr><td>جمع دریافتی:</td><td>${formatCurrency(summary.totalReceived)}</td></tr><tr><td>مبلغ نظارت (${state.settings.supervisionPercent * 100}% از ${state.settings.supervisionBase === 'received' ? 'دریافتی' : 'خرج کرد'}):</td><td>${formatCurrency(summary.supervisionFee)}</td></tr><tr style="font-size: 1.2em; border-top: 2px solid #333;"><td><b>${balanceStatusText}:</b></td><td><b>${balanceAmountText}</b></td></tr></table><h2>آیتم‌های اصلی و پیوست‌ها</h2><table><thead><tr style="background-color: #f9f9f9;"><th style="padding: 12px;">عنوان</th><th style="padding: 12px; text-align: left;">مبلغ</th><th style="padding: 12px; text-align: center;">پیوست</th></tr></thead><tbody>${attachmentsHtml}</tbody></table></div></body></html>`;
     zip.file(`گزارش-${employer.name}.html`, htmlContent);
     const content = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
