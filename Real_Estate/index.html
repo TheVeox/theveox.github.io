@@ -174,6 +174,19 @@
                         <h3 class="text-md font-semibold mb-3">تنظیمات پیشرفته</h3>
                         <div class="space-y-2">
                              <button id="manage-payment-profiles-btn" class="w-full px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300">مدیریت پروفایل‌های پرداخت</button>
+                             <button id="backup-data-btn" class="w-full px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all border border-gray-300">دریافت پشتیبان (JSON)</button>
+                             <div class="bg-white border border-gray-300 rounded-lg">
+                                <label class="w-full cursor-pointer text-center px-4 py-2 text-sm font-medium block hover:bg-gray-100 rounded-t-lg">
+                                    بازیابی اطلاعات (JSON)
+                                    <input type="file" id="restore-data-input" class="hidden" accept=".json">
+                                </label>
+                                <div class="border-t border-gray-300 px-4 py-2 text-sm">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="merge-data-checkbox" class="rounded text-blue-600 focus:ring-blue-500">
+                                        <span>ادغام با اطلاعات فعلی</span>
+                                    </label>
+                                </div>
+                             </div>
                              <button id="delete-all-data-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all border border-transparent">پاک کردن تمام داده ها</button>
                         </div>
                     </div>
@@ -239,6 +252,9 @@ const dom = {
     exportExcelBtn: document.getElementById('export-excel-btn'),
     exportHtmlBtn: document.getElementById('export-html-btn'),
     deleteAllDataBtn: document.getElementById('delete-all-data-btn'),
+    backupDataBtn: document.getElementById('backup-data-btn'),
+    restoreDataInput: document.getElementById('restore-data-input'),
+    mergeDataCheckbox: document.getElementById('merge-data-checkbox'),
 
     // Modals & Toasts
     employerModal: document.getElementById('employer-modal'),
@@ -472,6 +488,10 @@ function setupEventListeners() {
         state.settings.selectedPaymentProfileId = e.target.value;
         saveState();
     });
+
+    // Backup & Restore
+    dom.backupDataBtn.addEventListener('click', handleBackup);
+    dom.restoreDataInput.addEventListener('change', handleRestore);
 }
 
 function handleItemFormSubmit(e) {
@@ -775,6 +795,107 @@ function showToast(message, type = 'success') {
 }
 const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 const base64ToBlob = (base64, mimeType) => { const byteCharacters = atob(base64); const byteNumbers = new Array(byteCharacters.length); for (let i = 0; i < byteCharacters.length; i++) { byteNumbers[i] = byteCharacters.charCodeAt(i); } const byteArray = new Uint8Array(byteNumbers); return new Blob([byteArray], { type: mimeType }); };
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Backup & Restore Functions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function handleBackup() {
+    try {
+        const dataStr = JSON.stringify(state, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, "");
+        link.download = `factor-manager-backup-${timestamp}.json`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('فایل پشتیبان با موفقیت ایجاد شد.');
+    } catch (error) {
+        console.error("Backup failed:", error);
+        showToast('خطا در ایجاد فایل پشتیبان.', 'destructive');
+    }
+}
+
+function handleRestore(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const shouldMerge = dom.mergeDataCheckbox.checked;
+    const confirmationMessage = shouldMerge 
+        ? 'اطلاعات فایل پشتیبان با اطلاعات فعلی ادغام خواهد شد. داده‌های مشابه (بر اساس شناسه) بروزرسانی می‌شوند. آیا ادامه می‌دهید؟'
+        : 'وارد کردن فایل پشتیبان تمام اطلاعات فعلی را پاک کرده و اطلاعات جدید را جایگزین می‌کند. آیا مطمئن هستید؟';
+    
+    openConfirmModal(confirmationMessage, () => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const importedState = JSON.parse(event.target.result);
+                if (!importedState || typeof importedState.employers === 'undefined' || typeof importedState.settings === 'undefined') {
+                    throw new Error('Invalid backup file format.');
+                }
+                
+                if (shouldMerge) {
+                    // Perform merge
+                    importedState.employers.forEach(importedEmployer => {
+                        const existingEmployer = state.employers.find(e => e.id === importedEmployer.id);
+                        if (existingEmployer) {
+                            importedEmployer.items.forEach(importedItem => {
+                                const existingItemIndex = existingEmployer.items.findIndex(i => i.id === importedItem.id);
+                                if (existingItemIndex > -1) {
+                                    existingEmployer.items[existingItemIndex] = importedItem;
+                                } else {
+                                    existingEmployer.items.push(importedItem);
+                                }
+                            });
+                            existingEmployer.name = importedEmployer.name;
+                            existingEmployer.supervisionPercent = importedEmployer.supervisionPercent;
+                            existingEmployer.supervisionBase = importedEmployer.supervisionBase;
+                        } else {
+                            state.employers.push(importedEmployer);
+                        }
+                    });
+
+                    if (!state.settings.paymentProfiles) state.settings.paymentProfiles = [];
+                    importedState.settings.paymentProfiles.forEach(importedProfile => {
+                        const existingProfileIndex = state.settings.paymentProfiles.findIndex(p => p.id === importedProfile.id);
+                        if (existingProfileIndex > -1) {
+                            state.settings.paymentProfiles[existingProfileIndex] = importedProfile;
+                        } else {
+                            state.settings.paymentProfiles.push(importedProfile);
+                        }
+                    });
+                    
+                    state.settings.selectedPaymentProfileId = importedState.settings.selectedPaymentProfileId || state.settings.selectedPaymentProfileId;
+                    state.settings.currency = importedState.settings.currency || state.settings.currency;
+                    
+                    showToast('اطلاعات با موفقیت ادغام شد.');
+                    saveState().then(() => render());
+                    
+                } else {
+                    // Overwrite
+                    state = importedState;
+                    state.settings = {...defaultState.settings, ...state.settings};
+                    saveState().then(() => {
+                        showToast('اطلاعات با موفقیت بازیابی شد. صفحه مجددا بارگذاری می‌شود.');
+                        setTimeout(() => location.reload(), 1500);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Restore failed:', error);
+                showToast('فایل پشتیبان نامعتبر است یا در خواندن آن خطا رخ داده.', 'destructive');
+            } finally {
+                e.target.value = null; // Reset file input
+            }
+        };
+        reader.onerror = () => {
+             showToast('خطا در خواندن فایل.', 'destructive');
+             e.target.value = null;
+        }
+        reader.readAsText(file);
+    });
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Export functions
