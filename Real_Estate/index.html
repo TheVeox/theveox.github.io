@@ -16,6 +16,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
     
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
     <!-- Vazirmatn Font -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -148,6 +151,7 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50/80 sticky top-0 backdrop-blur-sm">
                                     <tr>
+                                        <th scope="col" class="w-12 px-4 py-3"></th> <!-- Drag handle column -->
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام آیتم</th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مبلغ</th>
                                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
@@ -296,6 +300,7 @@ const dom = {
 
 let state = {};
 let confirmCallback = null; // To store the action for the confirmation modal
+let sortableInstance = null; // To hold the Sortable instance
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadState();
@@ -370,6 +375,7 @@ function render() {
             renderActiveEmployerHeader(activeEmployer);
             renderItemsList(activeEmployer.items);
             renderSummary(activeEmployer);
+            initializeSortable(); // Re-initialize after rendering the list
             dom.exportExcelBtn.disabled = false;
             dom.exportHtmlBtn.disabled = false;
         } else {
@@ -398,6 +404,7 @@ function renderActiveEmployerHeader(employer) {
 function renderItemsList(items) {
     dom.itemsList.innerHTML = items.length === 0 ? '' : items.map(item => `
         <tr class="item-row hover:bg-gray-50 transition-colors" data-id="${item.id}">
+            <td class="px-4 py-4 whitespace-nowrap text-center cursor-move drag-handle text-gray-400 hover:text-gray-600" title="تغییر ترتیب"><i class="fas fa-grip-vertical"></i></td>
             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${item.name}</div></td>
             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${formatCurrency(item.amount)}</div></td>
             <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
@@ -448,6 +455,36 @@ function renderPaymentProfileSelector() {
         ).join('');
     }
 }
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Drag and Drop functionality
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function initializeSortable() {
+    if (sortableInstance) {
+        sortableInstance.destroy();
+    }
+    const listEl = dom.itemsList;
+    if (listEl) {
+        sortableInstance = new Sortable(listEl, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'bg-gray-100',
+            onEnd: (evt) => {
+                const activeEmployer = getActiveEmployer();
+                if (!activeEmployer) return;
+
+                // Move item in the state array
+                const [movedItem] = activeEmployer.items.splice(evt.oldIndex, 1);
+                activeEmployer.items.splice(evt.newIndex, 0, movedItem);
+
+                // No need to re-render, SortableJS handles the DOM. Just save the state.
+                saveState();
+                showToast('ترتیب آیتم‌ها بروزرسانی شد.');
+            },
+        });
+    }
+}
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Event Handlers & Actions
@@ -993,4 +1030,3 @@ async function exportToHTMLZip(employer) {
 </script>
 </body>
 </html>
-
