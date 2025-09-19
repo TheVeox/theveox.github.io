@@ -718,6 +718,7 @@ function renderPaymentProfileSelector() {
 function initializeSortable() {
     if (sortableInstance) {
         sortableInstance.destroy();
+        sortableInstance = null;
     }
     const listEl = dom.itemsList;
     if (listEl && listEl.children.length > 0) {
