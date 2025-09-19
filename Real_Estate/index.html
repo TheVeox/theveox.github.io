@@ -727,13 +727,39 @@ function initializeSortable() {
             ghostClass: 'bg-gray-100',
             onEnd: (evt) => {
                 const activeEmployer = getActiveEmployer();
-                if (!activeEmployer) return;
+                if (!activeEmployer || evt.oldIndex === evt.newIndex) return;
+
+                const items = activeEmployer.items;
+                const movedItemId = evt.item.dataset.id;
+
+                // Find and remove the moved item from the main data array
+                const originalIndex = items.findIndex(item => item.id === movedItemId);
+                if (originalIndex < 0) return; // Should not happen
+                const [movedItem] = items.splice(originalIndex, 1);
                 
-                const [movedItem] = activeEmployer.items.splice(evt.oldIndex, 1);
-                activeEmployer.items.splice(evt.newIndex, 0, movedItem);
+                const nextSibling = evt.item.nextElementSibling;
+                const prevSibling = evt.item.previousElementSibling;
+
+                if (nextSibling) {
+                    // The item was dropped before another visible item.
+                    // Insert it before that item in the main array.
+                    const nextSiblingId = nextSibling.dataset.id;
+                    const targetIndex = items.findIndex(item => item.id === nextSiblingId);
+                    items.splice(targetIndex, 0, movedItem);
+                } else if (prevSibling) {
+                    // The item was dropped at the end of the visible list.
+                    // Insert it after its new previous sibling in the main array.
+                    const prevSiblingId = prevSibling.dataset.id;
+                    const targetIndex = items.findIndex(item => item.id === prevSiblingId);
+                    items.splice(targetIndex + 1, 0, movedItem);
+                } else {
+                    // This case handles when the moved item is the only one in the visible list.
+                    // We put it back in its original position relative to hidden items.
+                    items.splice(originalIndex, 0, movedItem);
+                }
 
                 saveState();
-                render(); // Re-render to update row numbers
+                render(); 
                 showToast('ترتیب آیتم‌ها بروزرسانی شد.');
             },
         });
@@ -1364,3 +1390,4 @@ async function exportToHTMLZip(employer) {
 </script>
 </body>
 </html>
+
