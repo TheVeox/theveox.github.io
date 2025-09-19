@@ -172,7 +172,12 @@
                 <header class="h-16 bg-white/80 backdrop-blur-sm border-b flex items-center justify-between px-6 flex-shrink-0">
                     <div id="active-employer-header" class="flex items-center gap-3"></div>
                     <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-3 border-l pl-3 ml-3">
+                        <!-- Search Input -->
+                        <div class="relative">
+                            <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            <input type="search" id="search-input" placeholder="جستجو در آیتم‌ها..." class="w-64 bg-gray-50 border border-gray-300 rounded-lg h-10 pr-10 pl-4 focus:ring-2 focus:ring-blue-500 transition-all text-sm">
+                        </div>
+                        <div class="flex items-center gap-3 border-r pr-3 ml-3">
                             <span id="user-email-display" class="text-sm text-gray-600" title="کاربر فعلی"></span>
                             <button id="admin-panel-button" class="hidden px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-gray-100 transition-all border border-gray-300" title="پنل مدیریت"><i class="fas fa-user-shield mr-2"></i>مدیریت</button>
                             <button id="logout-btn" class="w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-600 bg-white rounded-lg hover:bg-gray-100 transition-all border border-gray-300" title="خروج"><i class="fas fa-sign-out-alt"></i></button>
@@ -208,7 +213,7 @@
                                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام آیتم</th>
                                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مبلغ</th>
                                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
-                                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">پیوست</th>
+                                            <th scope="col" class="w-52 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">پیوست</th>
                                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">گزارش کارفرما</th>
                                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
                                         </tr>
@@ -334,6 +339,7 @@ const dom = {
     backupDataBtn: document.getElementById('backup-data-btn'),
     restoreDataInput: document.getElementById('restore-data-input'),
     mergeDataCheckbox: document.getElementById('merge-data-checkbox'),
+    searchInput: document.getElementById('search-input'),
 
     // Modals & Toasts
     employerModal: document.getElementById('employer-modal'),
@@ -509,7 +515,7 @@ function setupAuthEventListeners() {
                 if (error.code === 'auth/email-already-in-use') {
                     showToast('این ایمیل قبلا استفاده شده است.', 'destructive');
                 } else if (error.code === 'auth/weak-password') {
-                     showToast('رمز عبور باید حداقل ۶ کاراکتر باشد.', 'destructive');
+                     showToast('رمز عبور باید حداقل ۶ کارختر باشد.', 'destructive');
                 } else {
                     showToast('خطا در ایجاد کاربر.', 'destructive');
                 }
@@ -559,10 +565,22 @@ async function loadState() {
     const savedState = await localforage.getItem('invoiceManagerData');
     state = savedState ? { ...defaultState, ...savedState, settings: {...defaultState.settings, ...(savedState?.settings || {})} } : { ...defaultState };
 
+    // Data migration scripts
     if (state.employers) {
         state.employers.forEach(emp => {
             if (emp.supervisionPercent === undefined) emp.supervisionPercent = defaultState.settings.supervisionPercent;
             if (emp.supervisionBase === undefined) emp.supervisionBase = defaultState.settings.supervisionBase;
+
+            // Migrate single attachment to attachments array
+            emp.items?.forEach(item => {
+                if (item.attachment && !item.attachments) {
+                    item.attachments = [{...item.attachment, id: generateId()}];
+                    delete item.attachment;
+                }
+                 if (item.attachments && !Array.isArray(item.attachments)) {
+                    item.attachments = [{...item.attachments, id: generateId()}];
+                }
+            });
         });
     }
 }
@@ -583,8 +601,9 @@ function render() {
         renderEmployersList();
         const activeEmployer = getActiveEmployer();
         if (activeEmployer) {
+            const searchTerm = dom.searchInput?.value.toLowerCase() || '';
             renderActiveEmployerHeader(activeEmployer);
-            renderItemsList(activeEmployer.items);
+            renderItemsList(activeEmployer.items, searchTerm);
             renderSummary(activeEmployer);
             initializeSortable(); // Re-initialize after rendering the list
             dom.exportExcelBtn.disabled = false;
@@ -612,26 +631,41 @@ function renderActiveEmployerHeader(employer) {
     dom.activeEmployerHeader.innerHTML = `<div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600">${employer.name.charAt(0)}</div><div><h2 class="text-xl font-bold">${employer.name}</h2><p class="text-xs text-gray-500">${employer.items.length} آیتم</p></div>`;
 }
 
-function renderItemsList(items) {
-    dom.itemsList.innerHTML = items.length === 0 ? '' : items.map((item, index) => `
+function renderItemsList(items, searchTerm = '') {
+    let filteredItems = items;
+    if (searchTerm) {
+        filteredItems = items.filter(item => item.name.toLowerCase().includes(searchTerm));
+    }
+
+    dom.itemsList.innerHTML = filteredItems.length === 0 ? '' : filteredItems.map((item, index) => `
         <tr class="item-row hover:bg-gray-50 transition-colors" data-id="${item.id}">
             <td class="px-4 py-4 whitespace-nowrap text-center cursor-move drag-handle text-gray-400 hover:text-gray-600" title="تغییر ترتیب"><i class="fas fa-grip-vertical"></i></td>
-            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${index + 1}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${items.findIndex(i => i.id === item.id) + 1}</td>
             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${item.name}</div></td>
             <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-500">${formatCurrency(item.amount)}</div></td>
             <td class="px-6 py-4 whitespace-nowrap text-center"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.type === 'expense' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">${item.type === 'expense' ? 'هزینه' : 'دریافتی'}</span></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                ${item.attachment ? `
-                    <div class="flex items-center justify-center gap-2">
-                        <button data-action="preview-attachment" title="${item.attachment.filename}" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200">${item.attachment.filename.substring(0, 15)}...</button>
-                        <button data-action="delete-attachment" class="p-1 text-red-500 hover:text-red-700 rounded-full w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200" title="حذف پیوست"><i class="fas fa-trash"></i></button>
-                    </div>
-                ` : `
-                    <label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">
-                        بارگذاری
-                        <input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf">
-                    </label>
-                `}
+                <div class="flex flex-col items-center gap-1 w-full max-w-[200px] mx-auto">
+                    ${(item.attachments && item.attachments.length > 0) ? `
+                        <div class="w-full space-y-1 max-h-24 overflow-y-auto pr-1">
+                            ${item.attachments.map(att => `
+                                <div class="flex items-center justify-between gap-1 bg-gray-100 p-1 rounded-md text-xs">
+                                    <button data-action="preview-attachment" data-attachment-id="${att.id}" title="${att.filename}" class="flex-1 text-right truncate text-blue-700 hover:underline">${att.filename}</button>
+                                    <button data-action="delete-attachment" data-attachment-id="${att.id}" class="p-1 text-red-500 hover:text-red-700 rounded-full w-5 h-5 flex-shrink-0 flex items-center justify-center hover:bg-red-100" title="حذف پیوست"><i class="fas fa-times text-xs"></i></button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <label class="cursor-pointer px-3 py-1 mt-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 w-full text-center">
+                            افزودن فایل دیگر
+                            <input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf" multiple>
+                        </label>
+                    ` : `
+                        <label class="cursor-pointer px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 w-full text-center">
+                            بارگذاری فایل
+                            <input type="file" class="hidden" data-action="upload-attachment" accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg,.pdf" multiple>
+                        </label>
+                    `}
+                </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-center"><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${item.isParent ? 'checked' : ''} class="sr-only peer" data-action="toggle-parent"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div></label></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
@@ -639,7 +673,17 @@ function renderItemsList(items) {
                 <button data-action="delete-item" class="p-2 text-red-600 hover:text-red-900 rounded-md" title="حذف"><i class="fas fa-trash"></i></button>
             </td>
         </tr>`).join('');
-    dom.emptyState.classList.toggle('hidden', items.length > 0);
+    
+    const hasItems = items.length > 0;
+    const hasFilteredResult = filteredItems.length > 0;
+    
+    if (!hasItems) {
+        dom.emptyState.innerHTML = `<h3 class="mt-4 text-sm font-semibold text-gray-900">بدون آیتم</h3><p class="mt-1 text-sm text-gray-500">برای شروع یک آیتم جدید اضافه کنید.</p>`;
+    } else if (!hasFilteredResult && searchTerm) {
+        dom.emptyState.innerHTML = `<h3 class="mt-4 text-sm font-semibold text-gray-900">نتیجه‌ای یافت نشد</h3><p class="mt-1 text-sm text-gray-500">هیچ آیتمی با عبارت "${searchTerm}" مطابقت ندارد.</p>`;
+    }
+
+    dom.emptyState.classList.toggle('hidden', hasFilteredResult);
 }
 
 function renderSummary(employer) {
@@ -727,6 +771,12 @@ function setupEventListeners() {
         closeConfirmModal();
     });
 
+    // Search listener
+    dom.searchInput.addEventListener('input', () => {
+         const activeEmployer = getActiveEmployer();
+         if(activeEmployer) renderItemsList(activeEmployer.items, dom.searchInput.value.toLowerCase());
+    });
+
     // Payment Profile Listeners
     dom.managePaymentProfilesBtn.addEventListener('click', openPaymentProfilesModal);
     dom.closePaymentProfilesModalBtn.addEventListener('click', closePaymentProfilesModal);
@@ -756,7 +806,7 @@ function handleItemFormSubmit(e) {
         if (item) { item.name = name; item.amount = amount; item.type = type; }
         showToast('آیتم با موفقیت بروزرسانی شد.');
     } else {
-        activeEmployer.items.push({ id: generateId(), name, amount, type, isParent: false, attachment: null, createdAt: new Date().toISOString() });
+        activeEmployer.items.push({ id: generateId(), name, amount, type, isParent: true, attachments: [], createdAt: new Date().toISOString() });
         showToast('آیتم جدید اضافه شد.');
     }
     resetItemForm();
@@ -850,6 +900,7 @@ function handleEmployerActions(e) {
     } else if (link) {
         e.preventDefault();
         state.activeEmployerId = link.dataset.id;
+        dom.searchInput.value = ''; // Clear search on employer switch
         render();
     }
 }
@@ -861,7 +912,11 @@ async function handleItemActions(e) {
     const itemId = itemRow?.dataset.id;
     const employer = getActiveEmployer();
     const item = employer?.items.find(i => i.id === itemId);
-    if (!item) return;
+    
+    if (!item && actionElement.dataset.action !== 'upload-attachment') return;
+    
+    const attachmentId = actionElement.dataset.attachmentId;
+
     switch (actionElement.dataset.action) {
         case 'edit-item': handleEditItem(item); break;
         case 'delete-item':
@@ -872,27 +927,50 @@ async function handleItemActions(e) {
             });
             break;
         case 'toggle-parent': item.isParent = e.target.checked; saveState(); break;
-        case 'upload-attachment': await handleFileUpload(e.target.files[0], item); break;
-        case 'preview-attachment': previewAttachment(item.attachment); break;
+        case 'upload-attachment': await handleFileUpload(e.target.files, item); e.target.value = null; break;
+        case 'preview-attachment':
+            const attachmentToPreview = item.attachments.find(a => a.id === attachmentId);
+            if(attachmentToPreview) previewAttachment(attachmentToPreview);
+            break;
         case 'delete-attachment':
-            openConfirmModal(`آیا از حذف پیوست "${item.attachment.filename}" مطمئن هستید؟`, () => {
-                item.attachment = null;
-                render();
-                showToast('پیوست با موفقیت حذف شد.');
-            });
+            const attachmentToDelete = item.attachments.find(a => a.id === attachmentId);
+            if(attachmentToDelete) {
+                openConfirmModal(`آیا از حذف پیوست "${attachmentToDelete.filename}" مطمئن هستید؟`, () => {
+                    item.attachments = item.attachments.filter(a => a.id !== attachmentId);
+                    render();
+                    showToast('پیوست با موفقیت حذف شد.');
+                });
+            }
             break;
     }
 }
 
-async function handleFileUpload(file, item) {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { showToast('حجم فایل نباید بیشتر از ۱۰ مگابایت باشد.', 'destructive'); return; }
-    try {
-        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
-        item.attachment = { filename: file.name, type: file.type, dataUrl: dataUrl };
+async function handleFileUpload(files, item) {
+    if (!files || files.length === 0) return;
+    
+    if (!item.attachments) {
+        item.attachments = [];
+    }
+
+    let uploadedCount = 0;
+    for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) { 
+            showToast(`حجم فایل ${file.name} نباید بیشتر از ۱۰ مگابایت باشد.`, 'destructive'); 
+            continue; 
+        }
+        try {
+            const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+            item.attachments.push({ id: generateId(), filename: file.name, type: file.type, dataUrl: dataUrl });
+            uploadedCount++;
+        } catch (error) { 
+            console.error("File read error:", error); 
+            showToast(`خطا در بارگذاری فایل ${file.name}.`, 'destructive'); 
+        }
+    }
+    if (uploadedCount > 0) {
         render();
-        showToast('فایل با موفقیت بارگذاری شد.');
-    } catch (error) { console.error("File read error:", error); showToast("خطا در بارگذاری فایل.", 'destructive'); }
+        showToast(`${uploadedCount} فایل با موفقیت بارگذاری شد.`);
+    }
 }
 
 function handleSettingsChange(e) {
@@ -1238,10 +1316,16 @@ async function exportToHTMLZip(employer) {
 
     parentItemsWithIndex.forEach(item => {
         let attachmentCellHtml = `<td style="padding: 12px; text-align: center;">-</td>`;
-        if (item.attachment) {
-            const blob = base64ToBlob(item.attachment.dataUrl.split(',')[1], item.attachment.type);
-            zip.file(`attachments/${item.attachment.filename}`, blob);
-            attachmentCellHtml = `<td style="padding: 12px; text-align: center;"><a href="attachments/${item.attachment.filename}" download="${item.attachment.filename}" style="text-decoration: none; background-color: #007bff; color: white; padding: 5px 12px; border-radius: 5px; font-size: 12px;">دانلود پیوست</a></td>`;
+        if (item.attachments && item.attachments.length > 0) {
+            let linksHtml = '';
+            item.attachments.forEach(att => {
+                const blob = base64ToBlob(att.dataUrl.split(',')[1], att.type);
+                const safeFilename = att.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                const filePath = `attachments/item_${item.id}/${safeFilename}`;
+                zip.file(filePath, blob);
+                linksHtml += `<a href="${filePath}" download="${att.filename}" style="display: block; margin-bottom: 5px; text-decoration: none; background-color: #007bff; color: white; padding: 5px 12px; border-radius: 5px; font-size: 12px;">${att.filename}</a>`;
+            });
+            attachmentCellHtml = `<td style="padding: 12px; text-align: center;">${linksHtml}</td>`;
         }
         attachmentsHtml += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px; text-align: center;">${item.originalIndex + 1}</td><td style="padding: 12px;">${item.name}</td><td style="padding: 12px; text-align: left;">${formatCurrency(item.amount)}</td>${attachmentCellHtml}</tr>`;
     });
@@ -1280,4 +1364,3 @@ async function exportToHTMLZip(employer) {
 </script>
 </body>
 </html>
-
