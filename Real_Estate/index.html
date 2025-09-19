@@ -793,8 +793,11 @@ function setupEventListeners() {
     
     dom.confirmCancelBtn.addEventListener('click', closeConfirmModal);
     dom.confirmAcceptBtn.addEventListener('click', () => {
-        if (confirmCallback) confirmCallback();
-        closeConfirmModal();
+        const callbackToRun = confirmCallback; // Store the callback
+        closeConfirmModal();                   // Immediately close the modal and clear the callback
+        if (callbackToRun) {
+            callbackToRun();                   // Now, execute the stored callback
+        }
     });
 
     // Search listener
